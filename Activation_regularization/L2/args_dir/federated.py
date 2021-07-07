@@ -54,7 +54,7 @@ def parse_arguments():
 
     # General Config
     parser.add_argument(
-        "--mode", help="data setting to use", default="dirichlet"
+        "--mode", help="data setting to use", default="iid"
     )
     parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
@@ -65,32 +65,39 @@ def parse_arguments():
     parser.add_argument(
         "--additional_experiment_name", help="specific information for logging", default=""
     )
-    '''
     parser.add_argument(
-        "--centralized",
-        action="store_true",
-        help="Whether or not to train in centralized setting",
+        "--seed", default=0, type=int, help="seed for initializing training. "
     )
     parser.add_argument(
-        "--federated_iid",
-        action="store_true",
-        help="Whether or not to train in federated setting",
+        "--cuda_visible_device",
+        default=0,
+        type=float,
+        metavar="N",
+        help="which GPU to use",
     )
     parser.add_argument(
-        "--federated_skew1class",
-        action="store_true",
-        help="Whether or not to train in 1class skewed Non-iid federated setting",
-    ) 
-    parser.add_argument(
-        "--federated_dirichlet",
-        action="store_true",
-        help="Whether or not to train in dirichlet Non-iid federated setting",
+        "-j",
+        "--workers",
+        default=20,
+        type=int,
+        metavar="N",
+        help="number of data loading workers (default: 20)",
     )
-    '''
     parser.add_argument(
         "--create_client_dataset",
         action="store_true",
         help="Whether or not to make new client dataset",
+    )
+    parser.add_argument(
+        "--config", help="Config file to use (see configs dir)", default=None
+    )
+    parser.add_argument(
+        "--log-dir", help="Where to save the runs. If None use ./runs", default=None
+    )
+
+    ## Training Config
+    parser.add_argument(
+        "-a", "--arch", metavar="ARCH", default="CNN", help="model architecture"
     )
     parser.add_argument(
         "--global_epochs",
@@ -114,63 +121,19 @@ def parse_arguments():
         help="number of local epochs to run on each global epoch",
     )
     parser.add_argument(
-        "--dirichlet_alpha",
-        default=-0.6,
-        type=float,
+        "--num_of_clients",
+        default=100,
+        type=int,
         metavar="N",
-        help="federated dirichlet alpha",
-    )
-
-    parser.add_argument(
-        "--cuda_visible_device",
-        default=0,
-        type=float,
-        metavar="N",
-        help="which GPU to use",
+        help="number of total clients",
     )
     parser.add_argument(
-        "--alpha",
-        default=1,
-        type=float,
-        metavar="N",
-        help="federated activation regularization hyperparameter alpha",
-    )
-    parser.add_argument(
-        "--alpha_mul_epoch",
-        action="store_true",
-        help="Whether or not to multiplicate alpha with epoch",
-    )
-    parser.add_argument(
-        "--alpha_divide_epoch",
-        action="store_true",
-        help="Whether or not to divide alpha by epoch",
-    )
-    parser.add_argument(
-        "--epsilon",
+        "--participation_rate",
         default=0.1,
         type=float,
         metavar="N",
-        help="Used in LSC Loss",
+        help="number of participation rate at each global epoch",
     )
-
-    parser.add_argument(
-        "--data", help="path to dataset base directory", default="./data"
-    )
-    parser.add_argument(
-        "--client_data", help="path to client dataset base directory", default="./client_data"
-    )
-    parser.add_argument("--optimizer", help="Which optimizer to use", default="sgd")
-    parser.add_argument("--set", help="name of dataset", type=str, default="CIFAR10")
-    parser.add_argument(
-        "-a", "--arch", metavar="ARCH", default="CNN", help="model architecture"
-    )
-    parser.add_argument(
-        "--config", help="Config file to use (see configs dir)", default=None
-    )
-    parser.add_argument(
-        "--log-dir", help="Where to save the runs. If None use ./runs", default=None
-    )
-
     parser.add_argument(
         "-b",
         "--batch_size",
@@ -181,6 +144,7 @@ def parse_arguments():
              "batch size of all GPUs on the current node when "
              "using Data Parallel or Distributed Data Parallel",
     )
+    parser.add_argument("--optimizer", help="Which optimizer to use", default="sgd")
     parser.add_argument(
         "--lr",
         "--learning-rate",
@@ -212,6 +176,40 @@ def parse_arguments():
         help="learning rate decay (default: 1.0)",
         dest="learning_rate_decay",
     )
+
+
+    ## Dataset
+    parser.add_argument("--set", help="name of dataset", type=str, default="CIFAR10")
+    parser.add_argument(
+        "--dirichlet_alpha",
+        default=-0.6,
+        type=float,
+        metavar="N",
+        help="federated dirichlet alpha",
+    )
+
+    parser.add_argument(
+        "--alpha_mul_epoch",
+        action="store_true",
+        help="Whether or not to multiplicate alpha with epoch",
+    )
+    parser.add_argument(
+        "--alpha_divide_epoch",
+        action="store_true",
+        help="Whether or not to divide alpha by epoch",
+    )
+    parser.add_argument(
+        "--data", help="path to dataset base directory", default="./data"
+    )
+    parser.add_argument(
+        "--client_data", help="path to client dataset base directory", default="./client_data"
+    )
+    parser.add_argument("--num-classes", default=10, type=int)
+
+
+
+    ## Eval
+
     parser.add_argument(
         "-p",
         "--print-freq",
@@ -220,33 +218,36 @@ def parse_arguments():
         metavar="N",
         help="print frequency (default: 1)",
     )
-    parser.add_argument("--num-classes", default=10, type=int)
+
+
+    ### Method Hyperparameters
+
+    ## l2-act-reg
+    parser.add_argument(
+        "--alpha",
+        default=1,
+        type=float,
+        metavar="N",
+        help="federated activation regularization hyperparameter alpha",
+    )
+
+    ## l2-weight
+    parser.add_argument(
+        "--mu",
+        default=1,
+        type=float,
+        metavar="N",
+        help="federated weight regularization hyperparameter mu",
+    )
+
+    ## ETC
 
     parser.add_argument(
-        "--seed", default=0, type=int, help="seed for initializing training. "
-    )
-    parser.add_argument(
-        "-j",
-        "--workers",
-        default=20,
-        type=int,
-        metavar="N",
-        help="number of data loading workers (default: 20)",
-    )
-
-    parser.add_argument(
-        "--num_of_clients",
-        default=100,
-        type=int,
-        metavar="N",
-        help="number of total clients",
-    )
-    parser.add_argument(
-        "--participation_rate",
+        "--epsilon",
         default=0.1,
         type=float,
         metavar="N",
-        help="number of participation rate at each global epoch",
+        help="Used in LSC Loss",
     )
     '''
 
