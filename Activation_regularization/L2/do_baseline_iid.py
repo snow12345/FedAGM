@@ -10,7 +10,7 @@ this_alpha=0
 this_argv.append('--alpha')
 this_argv.append(str(this_alpha))
 this_argv.append('--additional_experiment_name')
-this_argv.append('alpha'+str(this_alpha)+'globalupdate module화 debugging용')
+this_argv.append('alpha'+str(this_alpha))
 print(this_argv)
 subprocess.Popen(this_argv) 
 #####################################################

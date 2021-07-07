@@ -140,7 +140,7 @@ def parse_arguments():
     parser.add_argument(
         "-b",
         "--batch_size",
-        default=256,
+        default=50,
         type=int,
         metavar="N",
         help="mini-batch size (default: 256), this is the total "
@@ -218,7 +218,7 @@ def parse_arguments():
         "--print-freq",
         default=1,
         type=int,
-        metavar="N",
+ 
         help="print frequency (default: 1)",
     )
 
@@ -230,7 +230,7 @@ def parse_arguments():
         "--alpha",
         default=1,
         type=float,
-        metavar="N",
+
         help="federated activation regularization hyperparameter alpha",
     )
 
@@ -242,7 +242,53 @@ def parse_arguments():
         metavar="N",
         help="federated weight regularization hyperparameter mu",
     )
-
+    
+    ## FedAdam
+    parser.add_argument(
+        "--beta_1",
+        
+        default=0.9,
+        type=float,
+        metavar="N",
+        help="FedAdam beta_1",
+        
+    )
+    parser.add_argument(
+        "--beta_2",
+        
+        default=0.99,
+        type=float,
+        metavar="N",
+        help="FedAdam beta_2",
+        
+    )
+    parser.add_argument(
+        "--eta",
+        
+        default=1e-2,
+        type=float,
+        metavar="N",
+        help="FedAdam server learning rate",
+        
+    )
+    parser.add_argument(
+        "--server_learning_rate_decay",
+        
+        default=1,
+        type=float,
+        metavar="N",
+        help="FedAdam server learning rate decay",
+        
+    )    
+    parser.add_argument(
+        "--tau",
+        
+        default=1e-3,
+        type=float,
+        metavar="N",
+        help="FedAdam beta_2",
+        
+    )
     ## ETC
 
     parser.add_argument(
