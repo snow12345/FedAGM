@@ -21,7 +21,7 @@ class LocalUpdate(object):
         net.train()
         # train and update
         max_norm = 5
-        optimizer = optim.SGD(net.parameters(), lr=self.args.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
+        optimizer = optim.SGD(net.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
         epoch_loss = []
         for iter in range(self.local_epoch):
             batch_loss = []
