@@ -46,7 +46,7 @@ def get_dataset(args, trainset, mode='iid'):
         elif mode == 'skew1class':
             dataset = cifar_noniid(trainset, args.num_of_clients)
         elif mode == 'dirichlet':
-            dataset = cifar_dirichlet(trainset, args.num_of_clients, alpha=args.alpha)
+        dataset = cifar_dirichlet(trainset, args.num_of_clients, alpha=args.dirichlet_alpha)
         else:
             print("Invalid mode ==> please select in iid, skew1class, dirichlet")
             return
