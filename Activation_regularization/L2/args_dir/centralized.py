@@ -62,6 +62,9 @@ def parse_arguments():
         "--method", help="method to use", default="Fedavg"
     )
     parser.add_argument(
+        "--global_method", help="aggregation method to use", default="global_avg"
+    )
+    parser.add_argument(
         "--additional_experiment_name", help="specific information for logging", default=""
     )
     '''

@@ -11,6 +11,7 @@ import os
 import random
 import wandb
 from build_method import build_local_update_module
+from build_global_method import build_global_update_module
 from utils import get_scheduler, get_optimizer, get_model, get_dataset
 import copy
 
@@ -21,7 +22,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-wandb.init(entity='federated_learning', project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
+wandb.init(entity='federated_learning', project=args.project,group="tracking_learning_rate"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
 wandb.run.name=experiment_name
 wandb.run.save()
 wandb.config.update(args)
@@ -89,7 +90,10 @@ elif args.set == 'MNIST':
 
 
 LocalUpdate = build_local_update_module(args)
+global_update=build_global_update_module(args)
+global_update(args=args,device=device,trainset=trainset,testloader=testloader,LocalUpdate=LocalUpdate)
 
+'''
 model = get_model(args)
 model.to(device)
 wandb.watch(model)
@@ -143,7 +147,7 @@ for epoch in range(args.global_epochs):
 
     model.train()
 
-    wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1]})
+    wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1],'lr':this_lr})
 
     this_lr *= args.learning_rate_decay
     if args.alpha_mul_epoch == True:
@@ -157,3 +161,4 @@ print(loss_train)
 
 print('acc_train')
 print(acc_train)
+'''
