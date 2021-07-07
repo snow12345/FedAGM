@@ -21,7 +21,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-wandb.init(project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
+wandb.init(entity='federated_learning', project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
 wandb.run.name=experiment_name
 wandb.run.save()
 wandb.config.update(args)
@@ -98,7 +98,7 @@ model.train()
 epoch_loss = []
 weight_saved = model.state_dict()
 
-dataset = get_dataset(args, args.mode)
+dataset = get_dataset(args, trainset, args.mode)
 loss_train = []
 acc_train = []
 this_lr = args.lr
@@ -111,7 +111,7 @@ for epoch in range(args.global_epochs):
     selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
     print(f"This is global {epoch} epoch")
     for user in selected_user:
-        local_setting = LocalUpdate(lr=this_lr, local_epoch=args.local_epochs, device=device,
+        local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                     batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
         weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
         local_weight.append(copy.deepcopy(weight))

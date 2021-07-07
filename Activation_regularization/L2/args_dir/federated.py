@@ -3,6 +3,49 @@ import sys
 import yaml
 #from configs import parser as _parser
 
+
+USABLE_TYPES = set([float, int])
+
+
+def trim_preceding_hyphens(st):
+    i = 0
+    while st[i] == "-":
+        i += 1
+
+    return st[i:]
+
+
+def arg_to_varname(st: str):
+    st = trim_preceding_hyphens(st)
+    st = st.replace("-", "_")
+
+    return st.split("=")[0]
+
+
+def argv_to_vars(argv):
+    var_names = []
+    for arg in argv:
+        if arg.startswith("-") and arg_to_varname(arg) != "config":
+            var_names.append(arg_to_varname(arg))
+
+    return var_names
+
+
+def produce_override_string(args, override_args):
+    lines = []
+    for v in override_args:
+        if v != "multigpu":
+            v_arg = getattr(args, v)
+            if type(v_arg) in USABLE_TYPES:
+                lines.append(v + ": " + str(v_arg))
+            else:
+                lines.append(v + ": " + f'"{str(v_arg)}"')
+        else:
+            lines.append("multigpu: " + str(args.multigpu))
+
+    return "\n# ===== Overrided ===== #\n" + "\n".join(lines)
+
+
 args = None
 
 
@@ -11,7 +54,7 @@ def parse_arguments():
 
     # General Config
     parser.add_argument(
-        "--mode", help="data setting to use", default="iid"
+        "--mode", help="data setting to use", default="dirichlet"
     )
     parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
@@ -72,7 +115,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--dirichlet_alpha",
-        default=-0.3,
+        default=-0.6,
         type=float,
         metavar="N",
         help="federated dirichlet alpha",
@@ -87,7 +130,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--alpha",
-        default=0,
+        default=1,
         type=float,
         metavar="N",
         help="federated activation regularization hyperparameter alpha",
@@ -324,7 +367,7 @@ def parse_arguments():
 
 def get_config(args):
     # get commands from command line
-    override_args = _parser.argv_to_vars(sys.argv)
+    override_args = argv_to_vars(sys.argv)
 
     # load yaml file
     yaml_txt = open(args.config).read()

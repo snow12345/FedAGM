@@ -24,7 +24,7 @@ class DatasetSplit(Dataset):
         return torch.tensor(image), torch.tensor(label)
 
 
-def get_dataset(args, mode='iid'):
+def get_dataset(args, trainset, mode='iid'):
     directory = args.client_data + '/' + args.set + '/' + mode + (
         str(args.dirichlet_alpha) if mode == 'dirichlet' else '') + '.txt'
     check_already_exist = os.path.isfile(directory) and (os.stat(directory).st_size != 0)
