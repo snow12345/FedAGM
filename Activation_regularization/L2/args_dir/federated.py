@@ -81,7 +81,7 @@ def parse_arguments():
     parser.add_argument(
         "-j",
         "--workers",
-        default=20,
+        default=8,
         type=int,
         metavar="N",
         help="number of data loading workers (default: 20)",
@@ -104,7 +104,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--global_epochs",
-        default=500,
+        default=1000,
         type=int,
         metavar="N",
         help="number of total epochs to run",
@@ -173,7 +173,7 @@ def parse_arguments():
     parser.add_argument(
         "--ld",
         "--learning_rate_decay",
-        default=0.992,
+        default=1.0,
         type=float,
         metavar="LD",
         help="learning rate decay (default: 1.0)",
@@ -228,7 +228,7 @@ def parse_arguments():
     ## l2-act-reg
     parser.add_argument(
         "--alpha",
-        default=1,
+        default=0.0,
         type=float,
 
         help="federated activation regularization hyperparameter alpha",
@@ -237,7 +237,7 @@ def parse_arguments():
     ## l2-weight
     parser.add_argument(
         "--mu",
-        default=1,
+        default=0.0,
         type=float,
         metavar="N",
         help="federated weight regularization hyperparameter mu",
@@ -293,7 +293,7 @@ def parse_arguments():
 
     parser.add_argument(
         "--epsilon",
-        default=0.1,
+        default=0.0,
         type=float,
         metavar="N",
         help="Used in LSC Loss",
