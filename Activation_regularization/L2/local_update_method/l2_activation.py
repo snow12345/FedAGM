@@ -31,7 +31,7 @@ class LocalUpdate(object):
                 log_probs,activation_l2 = net(images,online_target=True)
                 loss = self.loss_func(log_probs, labels)+self.alpha*activation_l2
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm)
+                torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step()
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))

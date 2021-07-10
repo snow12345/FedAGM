@@ -41,7 +41,7 @@ class LocalUpdate(object):
                     reg_loss += ((p-fixed_params[n].detach())**2).sum()
                 loss = loss + 0.5 * self.args.mu * reg_loss
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm)
+                torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step()
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))

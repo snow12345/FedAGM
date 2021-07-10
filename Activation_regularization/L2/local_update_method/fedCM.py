@@ -21,7 +21,7 @@ class LocalUpdate(object):
         net.sync_online_and_global()
         net.train()
         # train and update
-        max_norm = 10
+
         optimizer = FedCM_SGD(net.parameters(), lr=self.lr, momentum=self.args.momentum, weight_decay=self.args.weight_decay)
         epoch_loss = []
         for iter in range(self.local_epoch):
@@ -35,7 +35,7 @@ class LocalUpdate(object):
                     log_probs,activation_l2 = net(images,online_target=True)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
-                #torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm)
+                #torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step(delta=delta, lamb=self.args.lamb)
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))

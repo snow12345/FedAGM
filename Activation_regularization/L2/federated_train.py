@@ -22,7 +22,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-wandb.init(entity='federated_learning', project=args.project,group="tracking_learning_rate"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
+wandb.init(entity='federated_learning', project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
 wandb.run.name=experiment_name
 wandb.run.save()
 wandb.config.update(args)

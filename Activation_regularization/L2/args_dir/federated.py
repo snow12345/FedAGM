@@ -179,7 +179,13 @@ def parse_arguments():
         help="learning rate decay (default: 1.0)",
         dest="learning_rate_decay",
     )
-
+    parser.add_argument(
+        "--gr_clipping_max_norm",
+        default=10,
+        type=int,
+        metavar="N",
+        help="gradient clippling max norm",
+    )
 
     ## Dataset
     parser.add_argument("--set", help="name of dataset", type=str, default="CIFAR10")
