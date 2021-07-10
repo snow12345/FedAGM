@@ -239,6 +239,20 @@ def parse_arguments():
 
         help="federated activation regularization hyperparameter alpha",
     )
+    ## pod
+    parser.add_argument(
+        "--pod_normalize",
+        action="store_false",
+        help="Whether or not to normalize activation in pod",
+    )
+    parser.add_argument(
+        "--collapse_channels",
+        help="Whether or not to normalize activation in pod",
+        default='spatial'
+        ####"channels" "width" "height" "gap" "spatial"
+    )
+    
+    
 
     ## l2-weight
     parser.add_argument(
