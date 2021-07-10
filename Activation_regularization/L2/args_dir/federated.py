@@ -182,7 +182,7 @@ def parse_arguments():
     parser.add_argument(
         "--gr_clipping_max_norm",
         default=10,
-        type=int,
+        type=float,
         metavar="N",
         help="gradient clippling max norm",
     )
