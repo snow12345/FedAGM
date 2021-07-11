@@ -61,7 +61,11 @@ def parse_arguments():
     )
     parser.add_argument(
         "--method", help="method to use", default="l2_act_reg"
-    )
+        #'Fedavg''l2_act_reg''FedProx''PodNet'
+    )  
+
+    
+    
     parser.add_argument(
         "--global_method", help="aggregation method to use", default="global_avg"
     )
@@ -249,10 +253,16 @@ def parse_arguments():
         "--collapse_channels",
         help="Whether or not to normalize activation in pod",
         default='spatial'
-        ####"channels" "width" "height" "gap" "spatial"
+        ####"channels" "width" "height" "gap" "spatial","pixel"
     )
-    
-    
+
+    parser.add_argument(
+        "--regularization_unit",
+        help="regularization layer unit",
+        default='Conv'
+        ####"Conv",'Block',"BasicBlock',"BottleBlock'
+    )    
+        
 
     ## l2-weight
     parser.add_argument(

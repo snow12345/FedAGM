@@ -3,7 +3,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from utils import DatasetSplit
 import torch
-
+from local_update_method.global_and_online_model import *
 
 class LocalUpdate(object):
     def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None,alpha=0.0):
@@ -17,8 +17,7 @@ class LocalUpdate(object):
         self.args=args
 
     def train(self, net):
-        net.sync_online_and_global()
-        net.train()
+        model=dual_model(self.args,net,net)
         # train and update
         
         optimizer = optim.SGD(net.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
@@ -28,7 +27,7 @@ class LocalUpdate(object):
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
-                log_probs,activation_l2 = net(images,online_target=True)
+                log_probs,activation_loss = model(images,online_target=False)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)

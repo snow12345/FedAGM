@@ -7,6 +7,8 @@ def build_local_update_module(args):
         from local_update_method.l2_activation import LocalUpdate
     elif args.method == 'FedProx':
         from local_update_method.weight_l2 import LocalUpdate
+    elif args.method == 'PodNet':
+        from local_update_method.podnet import LocalUpdate
     else:
         assert False
 
