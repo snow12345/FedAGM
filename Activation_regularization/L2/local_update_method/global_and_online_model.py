@@ -92,19 +92,19 @@ class dual_model(nn.Module):
 
         #현재 구현 상태: 각 Conv layer의 ouptut을 가지고 와서 그들의 distillation loss를 pod function을 이용해 구함
         #추후에 Resnet stage 단위로 바꿀 수 있다(Podnet paper:https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123650086.pdf)
-        online_hook_handles=[]
+        self.online_hook_handles=[]
         for layer in self.online_model.modules():
             layer_name=layer._get_name()
             if self.args.regularization_unit in layer_name:
                 handle = layer.register_forward_hook(self.online_save_output)
-                online_hook_handles.append(handle)
+                self.online_hook_handles.append(handle)
         
-        global_hook_handles=[]
+        self.global_hook_handles=[]
         for layer in self.global_model.modules():
             layer_name=layer._get_name()
             if self.args.regularization_unit in layer_name:
-                handle = layer.register_forward_hook(self.online_save_output)
-                online_hook_handles.append(handle)
+                handle = layer.register_forward_hook(self.global_save_output)
+                self.global_hook_handles.append(handle)
     
 
     
@@ -120,9 +120,14 @@ class dual_model(nn.Module):
          
             x=self.online_model(x)
             x1=self.global_model(x1)
-            online_outputs=self.online_save_output.get_outputs()            
+            online_outputs=self.online_save_output.get_outputs()
+            '''print('==============================')
+            print('online outputs')
+            print(online_outputs[0].requires_grad)'''
             global_outputs=self.global_save_output.get_outputs()
-            
+            '''print('==============================')
+            print('global outputs')
+            print(global_outputs[0].requires_grad)'''
             activation_loss=pod(    list_attentions_a=online_outputs,
                     list_attentions_b=global_outputs,
                     collapse_channels=self.args.collapse_channels,
