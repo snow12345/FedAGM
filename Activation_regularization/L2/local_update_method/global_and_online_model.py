@@ -10,7 +10,10 @@ import torch.nn.functional as F
 import copy
 
 
-
+def KD(input_p,input_q,T=1):
+    p=F.softmax((input_p/T),dim=1)
+    q=F.softmax((input_q/T),dim=1)
+    return ((p*((p/q).log())).sum())/len(input_p)
 
 def pod(
     list_attentions_a,
@@ -51,7 +54,7 @@ def pod(
 
         layer_loss = torch.mean(torch.frobenius_norm(a - b, dim=-1))
         loss += layer_loss
-    return loss / len(list_attentions_a)
+    return loss
 
 
 # In[17]:
@@ -119,19 +122,33 @@ class dual_model(nn.Module):
             self.global_save_output.clear()
          
             x=self.online_model(x)
+
+
             x1=self.global_model(x1)
             online_outputs=self.online_save_output.get_outputs()
-            '''print('==============================')
-            print('online outputs')
-            print(online_outputs[0].requires_grad)'''
             global_outputs=self.global_save_output.get_outputs()
-            '''print('==============================')
-            print('global outputs')
-            print(global_outputs[0].requires_grad)'''
-            activation_loss=pod(    list_attentions_a=online_outputs,
-                    list_attentions_b=global_outputs,
+
+            
+            
+            
+            
+            
+            intermediate_activation_loss=pod(    list_attentions_a=online_outputs[:-1],
+                    list_attentions_b=global_outputs[:-1],
                     collapse_channels=self.args.collapse_channels,
-                    normalize=self.args.pod_normalize,)
+                    normalize=self.args.pod_normalize,)/len(online_outputs)
+            
+            
+            last_activation_loss=pod(    list_attentions_a=online_outputs[-1:],
+                    list_attentions_b=global_outputs[-1:],
+                    collapse_channels=self.args.collapse_channels,
+                    normalize=self.args.pod_normalize,)/len(online_outputs)
+            
+            logit_loss=KD(input_p=x,input_q=x1,T=self.args.knowledge_temperature)
+            
+                  
+            activation_loss=self.args.lambda1*intermediate_activation_loss + self.args.lambda2*last_activation_loss + self.args.lambda3*logit_loss
+
             
             return x,activation_loss
             

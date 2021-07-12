@@ -28,8 +28,6 @@ class LocalUpdate(object):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
                 log_probs,activation_loss = model(images,online_target=True)
-                print(activation_loss)
-                print(activation_loss.requires_grad)
                 loss = self.loss_func(log_probs, labels)+self.alpha*activation_loss
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)

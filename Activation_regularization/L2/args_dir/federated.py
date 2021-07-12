@@ -262,8 +262,34 @@ def parse_arguments():
         default='Conv'
         ####"Conv",'Block',"BasicBlock',"BottleBlock'
     )    
-        
-
+    parser.add_argument(
+        "--knowledge_temperature",
+        default=1,
+        type=float,
+        metavar="N",
+        help="knowledge_temperature",
+    )        
+    parser.add_argument(
+        "--lambda1",
+        default=1,
+        type=float,
+        metavar="N",
+        help="intermediate activation loss weight",
+    )  
+    parser.add_argument(
+        "--lambda2",
+        default=1,
+        type=float,
+        metavar="N",
+        help="last activation loss weight",
+    )    
+    parser.add_argument(
+        "--lambda3",
+        default=1,
+        type=float,
+        metavar="N",
+        help="logit loss weight",
+    )    
     ## l2-weight
     parser.add_argument(
         "--mu",
