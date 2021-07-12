@@ -17,7 +17,8 @@ class LocalUpdate(object):
         self.args=args
 
     def train(self, net):
-        model=dual_model(self.args,net,net)
+        #model=dual_model(self.args,net,net)
+        model = net
         # train and update
         
         optimizer = optim.SGD(net.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
@@ -27,7 +28,7 @@ class LocalUpdate(object):
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
-                log_probs,activation_loss = model(images,online_target=False)
+                log_probs = model(images, online_target=False)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
