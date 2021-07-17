@@ -259,6 +259,7 @@ def parse_arguments():
     parser.add_argument(
         "--regularization_unit",
         help="regularization layer unit",
+	type=str,
         default='Conv'
         ####"Conv",'Block',"BasicBlock',"BottleBlock'
     )    
