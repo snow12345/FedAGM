@@ -30,12 +30,12 @@ class LocalUpdate(object):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
                 if self.args.arch == "ResNet18":
-                    log_probs = net(images, online_target=True)
+                    log_probs = net(images, online_target=False)
                 else:
-                    log_probs,activation_l2 = net(images,online_target=True)
+                    log_probs,activation_l2 = net(images,online_target=False)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
-                #torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
+                torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step(delta=delta, lamb=self.args.lamb)
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))

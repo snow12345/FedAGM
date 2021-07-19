@@ -99,7 +99,7 @@ class FedCM_SGD(Optimizer):
                     continue
                 #d_p = lamb * p.grad + (1 - lamb) * delta[keys[idx]]
                 d_p = p.grad
-                d_p.mul_(lamb).add_(delta[keys[idx]], alpha=-1 * (1-lamb))
+                d_p = d_p.mul(lamb).add(delta[keys[idx]], alpha=1 * (1-lamb))
                 if weight_decay != 0:
                     d_p = d_p.add(p, alpha=weight_decay)
                 if momentum != 0:

@@ -85,7 +85,7 @@ def parse_arguments():
     parser.add_argument(
         "-j",
         "--workers",
-        default=8,
+        default=0,
         type=int,
         metavar="N",
         help="number of data loading workers (default: 20)",
@@ -346,6 +346,29 @@ def parse_arguments():
         help="FedAdam beta_2",
         
     )
+
+    ## FedCM
+    parser.add_argument(
+        "--g_lr",
+
+        default=1.0,
+        type=float,
+        metavar="N",
+        help="global learning rate",
+
+    )
+
+    parser.add_argument(
+        "--lamb",
+
+        default=0.1,
+        type=float,
+        metavar="N",
+        help="weight of local gradient for local update",
+
+    )
+
+
     ## ETC
 
     parser.add_argument(

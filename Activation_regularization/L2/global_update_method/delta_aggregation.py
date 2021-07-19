@@ -26,12 +26,13 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     this_alpha = args.alpha
     global_delta = copy.deepcopy(model.state_dict())
     for key in global_delta.keys():
-        global_delta[key] = 0
+        global_delta[key] = torch.zeros_like(global_delta[key])
 
     for epoch in range(args.global_epochs):
         local_weight = []
         local_loss = []
         local_delta = []
+        #print('global delta of linear weight', global_delta['linear.weight'])
         global_weight = copy.deepcopy(model.state_dict())
         m = max(int(args.participation_rate * args.num_of_clients), 1)
         selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
@@ -40,10 +41,11 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
             weight, loss = local_setting.train(net=copy.deepcopy(model).to(device), delta=global_delta)
+            #weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
             ## store local delta
-            delta = copy.deepcopy(weight)
+            delta = {}
             for key in weight.keys():
                 delta[key] = weight[key] - global_weight[key]
             local_delta.append(delta)
@@ -56,11 +58,14 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         for key in global_delta.keys():
             for i in range(1, len(local_delta)):
                 global_delta[key] += local_delta[i][key]
-            global_delta[key] = global_delta[key] / (-1 * len(local_delta) * local_setting.K * args.lr)
-            global_lr = args.g_lr * local_setting.K * args.lr
+            global_delta[key] = global_delta[key] / (-1 * len(local_delta) * local_setting.K * this_lr)
+            #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
+            global_lr = args.g_lr
+            #global_lr = args.g_lr
+            #print('global_lr', global_lr)
             global_weight[key] = global_weight[key] - global_lr * global_delta[key]
+            #print((FedAvg_weight[key] == global_weight[key]).all())
         ## global weight update
-        #model.load_state_dict(global_weight)
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)
         print(' Average loss {:.3f}'.format(loss_avg))

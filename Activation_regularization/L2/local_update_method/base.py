@@ -6,7 +6,7 @@ import torch
 from local_update_method.global_and_online_model import *
 
 class LocalUpdate(object):
-    def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None,alpha=0.0):
+    def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None, alpha=0.0):
         self.lr=lr
         self.local_epoch=local_epoch
         self.device=device
@@ -15,8 +15,9 @@ class LocalUpdate(object):
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
         self.alpha=alpha
         self.args=args
+        self.K = len(self.ldr_train)
 
-    def train(self, net):
+    def train(self, net, delta=None):
         #model=dual_model(self.args,net,net)
         model = net
         # train and update

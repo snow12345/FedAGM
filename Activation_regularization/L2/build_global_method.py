@@ -5,6 +5,8 @@ def build_global_update_module(args):
         from global_update_method.base_aggregation import GlobalUpdate
     elif args.global_method == 'global_adam':
         from global_update_method.adam_aggregation import GlobalUpdate
+    elif args.global_method == 'global_delta':
+        from global_update_method.delta_aggregation import GlobalUpdate
 
     else:
         assert False

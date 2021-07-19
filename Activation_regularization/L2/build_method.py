@@ -9,6 +9,8 @@ def build_local_update_module(args):
         from local_update_method.weight_l2 import LocalUpdate
     elif args.method == 'PodNet':
         from local_update_method.podnet import LocalUpdate
+    elif args.method == 'FedCM':
+        from local_update_method.fedCM import LocalUpdate
     else:
         assert False
 
