@@ -59,7 +59,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 client_weight[key] += local_weight[i][key]
             client_weight[key] /= len(local_weight)
             delta_client_mean[key]=client_weight[key]-x_t[key]
-            delta_t[key]=delta_t[key]*args.beta_1+delta_client_mean[key]*(1-args.beta_1)
+            delta_t[key]=delta_t[key]*args.beta_1 + delta_client_mean[key]*(1-args.beta_1)
             v_t[key]=v_t[key]*args.beta_2+(delta_t[key]*delta_t[key])*(1-args.beta_2)
             x_t[key]+=this_server_lr*delta_t[key]/((v_t[key]**0.5)+args.tau)
             

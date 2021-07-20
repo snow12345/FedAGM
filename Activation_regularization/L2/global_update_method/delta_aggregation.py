@@ -58,7 +58,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         for key in global_delta.keys():
             for i in range(1, len(local_delta)):
                 global_delta[key] += local_delta[i][key]
-            global_delta[key] = global_delta[key] / (-1 * len(local_delta) * local_setting.K * this_lr)
+            global_delta[key] = global_delta[key] / (-1 * len(local_delta) * local_setting.K * args.local_epochs * this_lr)
             #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
             global_lr = args.g_lr
             #global_lr = args.g_lr
