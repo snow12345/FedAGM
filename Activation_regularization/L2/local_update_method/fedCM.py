@@ -18,7 +18,7 @@ class LocalUpdate(object):
         self.K = len(self.ldr_train)
 
     def train(self, net, delta=None):
-        net.sync_online_and_global()
+        #net.sync_online_and_global()
         net.train()
         # train and update
 

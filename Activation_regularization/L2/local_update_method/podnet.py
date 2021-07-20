@@ -19,7 +19,7 @@ class LocalUpdate(object):
     def train(self, net):
         model=dual_model(self.args,net,net)
         # train and update
-        
+        #print("Before_training_global_model",model.global_model.state_dict()['fc3.bias'])
         optimizer = optim.SGD(model.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
         epoch_loss = []
         for iter in range(self.local_epoch):
@@ -34,4 +34,5 @@ class LocalUpdate(object):
                 optimizer.step()
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
+        #print("After_training_global_model",model.global_model.state_dict()['fc3.bias'])
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)

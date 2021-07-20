@@ -17,7 +17,7 @@ class LocalUpdate(object):
         self.args = args
 
     def train(self, net):
-        net.sync_online_and_global()
+        #net.sync_online_and_global()
         net.train()
         # train and update
         max_norm = 5

@@ -29,7 +29,7 @@ class LocalUpdate(object):
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
-                log_probs = model(images, online_target=False)
+                log_probs = model(images)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.gr_clipping_max_norm)

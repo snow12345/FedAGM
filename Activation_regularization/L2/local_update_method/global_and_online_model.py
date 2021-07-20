@@ -8,13 +8,58 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import copy
+import wandb
+import sys
 
-
+def set_epsilon(x,epsilon=2e-45):
+    return epsilon+(1-epsilon)*x
 def KD(input_p,input_q,T=1):
     p=F.softmax((input_p/T),dim=1)
     q=F.softmax((input_q/T),dim=1)
-    return ((p*((p/q).log())).sum())/len(input_p)
-
+    result=((p*((p/q).log())).sum())/len(input_p)
+    
+    if not torch.isfinite(result):
+        print('==================================================================')
+        print('input_p')
+        print(input_p)
+        
+        print('==================================================================')
+        print('input_q')
+        print(input_q)
+        print('==================================================================')
+        print('p')
+        print(p)
+        
+        print('==================================================================')
+        print('q')
+        print(q)
+        
+        
+        print('******************************************************************')
+        print('p/q')
+        print(p/q)
+        
+        print('******************************************************************')
+        print('(p/q).log()')
+        print((p/q).log())        
+        
+        print('******************************************************************')
+        print('(p*((p/q).log())).sum()')
+        print((p*((p/q).log())).sum())            
+    
+    return result
+def JSD(input_p,input_q,T=1):
+    p=F.softmax((input_p/T),dim=1)
+    q=F.softmax((input_q/T),dim=1)
+    
+    p=set_epsilon(p)
+    q=set_epsilon(q)
+    
+    criterion = torch.nn.KLDivLoss(reduction='batchmean')
+    M=0.5*(p+q)   
+    result=0.5*(criterion(M.log(),p)+criterion(M.log(),q))
+    
+    return result
 def pod(
     list_attentions_a,
     list_attentions_b,
@@ -144,8 +189,47 @@ class dual_model(nn.Module):
                     collapse_channels=self.args.collapse_channels,
                     normalize=self.args.pod_normalize,)/len(online_outputs)
             
-            logit_loss=KD(input_p=x,input_q=x1,T=self.args.knowledge_temperature)
+            #criterion = torch.nn.KLDivLoss(reduction='batchmean')
+            #logit_loss=(x.log(),x1)
+            #mse=nn.MSELoss()
             
+            #logit_loss=mse(x,x1)
+            
+            logit_loss=JSD(x1,x)
+            #KD(input_p=x,input_q=x1,T=self.args.knowledge_temperature)
+            if not torch.isfinite(intermediate_activation_loss):
+                print('WARNING: non-finite intermediate_activation_loss, ending training ')
+                exit(1)
+            if not torch.isfinite(last_activation_loss):
+                print('WARNING: non-finite last_activation_loss, ending training ')
+                exit(1)
+            if not torch.isfinite(logit_loss):
+            #
+                print('WARNING: non-finite logit_loss, ending training ')
+                online_dict=self.online_model.state_dict()
+                global_dict=self.global_model.state_dict()
+                parameter_nan=False
+                for n in (online_dict):
+                    online_nan=torch.isnan(online_dict[n]).sum()
+                    global_nan=torch.isnan(global_dict[n]).sum()
+                    
+                    if (online_nan>=1) or (global_nan>=1):
+                        print("Nan parameter")
+                        print("Name: "+n)
+                        print("online")
+                        print(online_nan>=1)
+                        print(online_dict[n])
+                        print("global")
+                        print(global_nan>=1)
+                        print(global_dict[n])
+                        parameter_nan=True
+               
+                print("Exist nan parameter? :", parameter_nan)
+                exit(1)
+                
+            wandb.log({'intermediate_activation_loss':intermediate_activation_loss})
+            wandb.log({'last_activation_loss':last_activation_loss})
+            wandb.log({'logit_loss':logit_loss})
                   
             activation_loss=self.args.lambda1*intermediate_activation_loss + self.args.lambda2*last_activation_loss + self.args.lambda3*logit_loss
 

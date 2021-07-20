@@ -60,7 +60,7 @@ def parse_arguments():
         "--project", help="data setting to use", default="federated_learning"
     )
     parser.add_argument(
-        "--method", help="method to use", default="l2_act_reg"
+        "--method", help="method to use", default="Fedavg"
         #'Fedavg''l2_act_reg''FedProx''PodNet'
     )  
 

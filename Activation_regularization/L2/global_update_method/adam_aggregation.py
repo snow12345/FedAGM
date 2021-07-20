@@ -30,6 +30,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     delta_t=copy.deepcopy(model.state_dict())
     for key in delta_t.keys():
         delta_t[key]*=0
+        delta_t[key]+=(args.tau**2)
     v_t=copy.deepcopy(delta_t)
     this_server_lr=args.eta
     
@@ -91,6 +92,11 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1],'lr':this_lr})
 
         this_lr *= args.learning_rate_decay
+        #this_lr=args.lr/((epoch+1)**0.5)
+        
+        
+        
+        
         if args.alpha_mul_epoch == True:
             this_alpha = args.alpha * (epoch + 1)
         elif args.alpha_divide_epoch == True:
