@@ -227,9 +227,9 @@ class dual_model(nn.Module):
                 print("Exist nan parameter? :", parameter_nan)
                 exit(1)
                 
-            wandb.log({'intermediate_activation_loss':intermediate_activation_loss})
-            wandb.log({'last_activation_loss':last_activation_loss})
-            wandb.log({'logit_loss':logit_loss})
+            #wandb.log({'intermediate_activation_loss':intermediate_activation_loss})
+            #wandb.log({'last_activation_loss':last_activation_loss})
+            #wandb.log({'logit_loss':logit_loss})
                   
             activation_loss=self.args.lambda1*intermediate_activation_loss + self.args.lambda2*last_activation_loss + self.args.lambda3*logit_loss
 
