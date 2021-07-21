@@ -24,26 +24,39 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     acc_train = []
     this_lr = args.lr
     this_alpha = args.alpha
+    
 
     for epoch in range(args.global_epochs):
+        num_of_data_clients=[]
         local_weight = []
         local_loss = []
         m = max(int(args.participation_rate * args.num_of_clients), 1)
         selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
         print(f"This is global {epoch} epoch")
         for user in selected_user:
+            num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
             weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
+                                      
+        total_num_of_data_clients=sum(num_of_data_clients)
+                                       
+        
         FedAvg_weight = copy.deepcopy(local_weight[0])
         for key in FedAvg_weight.keys():
-            for i in range(1, len(local_weight)):
-                FedAvg_weight[key] += local_weight[i][key]
-            FedAvg_weight[key] /= len(local_weight)
+            for i in range(len(local_weight)):
+                if i==0:
+                    FedAvg_weight[key]*=num_of_data_clients[i]
+                else:                       
+                    FedAvg_weight[key] += local_weight[i][key]*num_of_data_clients[i]
+            FedAvg_weight[key] /= total_num_of_data_clients
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)
+                                       
+                                       
+        print(' num_of_data_clients : ',num_of_data_clients)                                   
         print(' Average loss {:.3f}'.format(loss_avg))
         loss_train.append(loss_avg)
         if epoch % args.print_freq == 0:

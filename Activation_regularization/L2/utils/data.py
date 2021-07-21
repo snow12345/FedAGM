@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import  Dataset
 import os
-from datasets.cifar import cifar_noniid, cifar_dirichlet, cifar_iid
+from datasets.cifar import cifar_noniid, cifar_dirichlet_balanced,cifar_dirichlet_unbalanced, cifar_iid
 
 
 __all__ = ['DatasetSplit', 'get_dataset']
@@ -25,16 +25,17 @@ class DatasetSplit(Dataset):
 
 
 def get_dataset(args, trainset, mode='iid'):
-    directory = args.client_data + '/' + args.set + '/' + mode + (
-        str(args.dirichlet_alpha) if mode == 'dirichlet' else '') + '.txt'
-    check_already_exist = os.path.isfile(directory) and (os.stat(directory).st_size != 0)
+    directory = args.client_data + '/' + args.set + '/' + ('un' if args.data_unbalanced==True else '') + 'balanced'
+    filepath=directory+'/' + mode + (str(args.dirichlet_alpha) if mode == 'dirichlet' else '') + '.txt'
+    check_already_exist = os.path.isfile(filepath) and (os.stat(filepath).st_size != 0)
     create_new_client_data = not check_already_exist or args.create_client_dataset
     print("create new client data: " + str(create_new_client_data))
 
     if create_new_client_data == False:
         try:
+
             dataset = {}
-            with open(directory) as f:
+            with open(filepath) as f:
                 for idx, line in enumerate(f):
                     dataset = eval(line)
         except:
@@ -46,13 +47,16 @@ def get_dataset(args, trainset, mode='iid'):
         elif mode == 'skew1class':
             dataset = cifar_noniid(trainset, args.num_of_clients)
         elif mode == 'dirichlet':
-            dataset = cifar_dirichlet(trainset, args.num_of_clients, alpha=args.dirichlet_alpha)
+            if args.data_unbalanced==True:
+                dataset = cifar_dirichlet_unbalanced(trainset, args.num_of_clients, alpha=args.dirichlet_alpha)
+            else:
+                dataset = cifar_dirichlet_balanced(trainset, args.num_of_clients, alpha=args.dirichlet_alpha)
         else:
             print("Invalid mode ==> please select in iid, skew1class, dirichlet")
             return
         try:
-            os.makedirs(args.client_data + '/' + args.set, exist_ok=True)
-            with open(directory, 'w') as f:
+            os.makedirs(directory, exist_ok=True)
+            with open(filepath, 'w') as f:
                 print(dataset, file=f)
 
         except:

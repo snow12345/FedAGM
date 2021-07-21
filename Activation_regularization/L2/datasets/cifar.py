@@ -61,7 +61,7 @@ def cifar_noniid(dataset, num_users):
 
 
 
-def cifar_dirichlet(dataset, n_nets, alpha=0.5):
+def cifar_dirichlet_unbalanced(dataset, n_nets, alpha=0.5):
     '''
     if dataset == 'mnist':
         X_train, y_train, X_test, y_test = load_mnist_data(datadir)
@@ -109,3 +109,37 @@ def cifar_dirichlet(dataset, n_nets, alpha=0.5):
     return net_dataidx_map
     #return (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts)
 
+def cifar_dirichlet_balanced(dataset, n_nets, alpha=0.5):
+
+    y_train=torch.zeros(len(dataset),dtype=torch.long)
+
+    for a in range(len(dataset)):
+        y_train[a]=(dataset[a][1])
+    n_train = len(dataset)
+
+    min_size = 0
+    K = 10
+    N=len(dataset)
+    N = y_train.shape[0]
+    print(N)
+    net_dataidx_map = {i: np.array([],dtype='int64') for i in range(n_nets)}
+    assigned_ids = []
+    idx_batch = [[] for _ in range(n_nets)]
+    num_data_per_client=int(N/n_nets)
+    for i in range(n_nets):
+        weights = torch.zeros(N)
+        proportions = np.random.dirichlet(np.repeat(alpha, K))
+        for k in range(K):
+            idx_k = np.where(y_train == k)[0]
+            weights[idx_k]=proportions[k]
+        weights[assigned_ids] = 0.0
+        idx_batch[i] = (torch.multinomial(weights, num_data_per_client, replacement=False)).tolist()
+        assigned_ids+=idx_batch[i]
+
+    for j in range(n_nets):
+        np.random.shuffle(idx_batch[j])
+        net_dataidx_map[j] = idx_batch[j]
+
+    #traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map, logdir)
+    return net_dataidx_map
+    #return (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts)

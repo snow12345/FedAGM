@@ -32,7 +32,7 @@ class LocalUpdate(object):
                 if self.args.arch == "ResNet18":
                     log_probs = net(images, online_target=False)
                 else:
-                    log_probs,activation_l2 = net(images)
+                    log_probs= net(images)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)

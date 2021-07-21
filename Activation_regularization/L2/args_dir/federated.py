@@ -57,6 +57,9 @@ def parse_arguments():
         "--mode", help="data setting to use", default="iid"
     )
     parser.add_argument(
+        "--data_unbalanced", action='store_true', help="create unbalanced client data"
+    )
+    parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
     )
     parser.add_argument(
