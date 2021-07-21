@@ -74,8 +74,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 if i==0:
                     global_delta[key] *=num_of_data_clients[i]
                 else:
-                    global_delta[key] += local_delta[i][key]*num_of_data_clients[i]
-            global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * K_mean * args.local_epochs * this_lr)
+                    global_delta[key] += local_delta[i][key]*num_of_data_clients[i]/local_K[i]
+            global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * args.local_epochs * this_lr)
             #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
             global_lr = args.g_lr
             #global_lr = args.g_lr
