@@ -371,6 +371,22 @@ def parse_arguments():
 
     )
 
+    ## Proxy Regularization
+
+    parser.add_argument(
+        "--temp",
+        default=0.2,
+        type=float,
+        metavar="N",
+        help="temperature",
+
+    )
+    parser.add_argument(
+        "--l2_norm",
+        action="store_true",
+        help="l2_norm classifier",
+    )
+
 
     ## ETC
 
