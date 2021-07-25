@@ -69,8 +69,9 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes=10, l2_norm=False):
         super(ResNet, self).__init__()
+        self.l2_norm = l2_norm
         self.in_planes = 64
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
@@ -80,7 +81,10 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512*block.expansion, num_classes)
+        if l2_norm:
+            self.linear = nn.Linear(512 * block.expansion, num_classes, bias=False)
+        else:
+            self.linear = nn.Linear(512*block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -98,7 +102,17 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        out = self.linear(out)
+        if self.l2_norm:
+            with torch.no_grad():
+                w = self.linear.weight.data.clone()
+                w = F.normalize(w, dim=1, p=2)
+                self.linear.weight.copy_(w)
+            #self.linear = F.normalize(self.linear)
+            #self.linear.weight.data = F.normalize(self.linear.weight.data, p=2, dim=1)
+            #out = F.normalize(out, dim=1)
+            out = self.linear(out)
+        else:
+            out = self.linear(out)
         return out
 
     def sync_online_and_global(self):
@@ -111,24 +125,24 @@ class ResNet(nn.Module):
         self.load_state_dict(state_dict)
 
 
-def ResNet18(num_classes=10):
-    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes)
+def ResNet18(num_classes=10, l2_norm=False):
+    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, l2_norm=l2_norm)
 
 
-def ResNet34():
-    return ResNet(BasicBlock, [3, 4, 6, 3])
+def ResNet34(num_classes=10, l2_norm=False):
+    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes=num_classes, l2_norm=l2_norm)
 
 
-def ResNet50():
-    return ResNet(Bottleneck, [3, 4, 6, 3])
+def ResNet50(num_classes=10, l2_norm=False):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, l2_norm=l2_norm)
 
 
-def ResNet101():
-    return ResNet(Bottleneck, [3, 4, 23, 3])
+def ResNet101(num_classes=10, l2_norm=False):
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes=num_classes, l2_norm=l2_norm)
 
 
-def ResNet152():
-    return ResNet(Bottleneck, [3, 8, 36, 3])
+def ResNet152(num_classes=10, l2_norm=False):
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes=num_classes, l2_norm=l2_norm)
 
 
 def test():

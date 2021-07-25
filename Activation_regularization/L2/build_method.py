@@ -11,6 +11,13 @@ def build_local_update_module(args):
         from local_update_method.podnet import LocalUpdate
     elif args.method == 'FedCM':
         from local_update_method.fedCM import LocalUpdate
+    elif args.method == 'FedCADAM':
+        from local_update_method.fedCADAM import LocalUpdate
+    elif args.method == 'FedPReg':
+        from local_update_method.proxy_reg import LocalUpdate
+
+    elif args.method == 'byol':
+        from local_update_method.base_byol import LocalUpdate
     else:
         assert False
 

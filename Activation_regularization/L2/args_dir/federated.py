@@ -88,7 +88,7 @@ def parse_arguments():
     parser.add_argument(
         "-j",
         "--workers",
-        default=0,
+        default=8,
         type=int,
         metavar="N",
         help="number of data loading workers (default: 20)",
@@ -397,6 +397,11 @@ def parse_arguments():
         metavar="N",
         help="Used in LSC Loss",
     )
+
+
+    ## byol
+    parser.add_argument('--rampup_length', default=200, type=int)
+    parser.add_argument('--rampup_coefficient', type=float, default=5)
     '''
 
     parser.add_argument(
