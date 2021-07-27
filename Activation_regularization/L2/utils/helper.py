@@ -7,7 +7,7 @@ __all__ = ['get_model', 'get_optimizer', 'get_scheduler']
 def get_model(args):
 
     print("=> Creating model '{}'".format(args.arch))
-    model = models.__dict__[args.arch](l2_norm=args.l2_norm)
+    model = models.__dict__[args.arch]()#(l2_norm=args.l2_norm)
     return model
 
 

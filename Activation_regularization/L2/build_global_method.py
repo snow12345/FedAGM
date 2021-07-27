@@ -7,6 +7,8 @@ def build_global_update_module(args):
         from global_update_method.adam_aggregation import GlobalUpdate
     elif args.global_method == 'global_delta':
         from global_update_method.delta_aggregation import GlobalUpdate
+    elif args.global_method == 'global_delta_topk':
+        from global_update_method.topk_delta_aggregation import GlobalUpdate
     elif args.global_method == 'global_delta_ema':
         from global_update_method.ema_delta_aggregation import GlobalUpdate
     elif args.global_method == 'byol':

@@ -9,7 +9,7 @@ this_alpha=0
 this_argv.append('--alpha')
 this_argv.append(str(this_alpha))
 this_argv.append('--additional_experiment_name')
-this_argv.append('FedAvg balanced')
+this_argv.append('FedAvg data augmentation')
 print(this_argv)
 subprocess.Popen(this_argv) 
 #####################################################

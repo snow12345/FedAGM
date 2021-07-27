@@ -43,7 +43,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Build Dataset
 if args.set == 'CIFAR10':
-
+    '''
     if args.method != 'byol':
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
@@ -65,31 +65,43 @@ if args.set == 'CIFAR10':
                                                download=True, transform=transform_test)
         testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
                                                  shuffle=False, num_workers=args.workers)
-    else:
-        color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
-        transform_train = transforms.Compose(
+    else:'''
+    '''
+    color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
+    transform_train = transforms.Compose(
+        [transforms.RandomRotation(10),
+         transforms.RandomCrop(32, padding=4),
+         transforms.RandomHorizontalFlip(),
+         transforms.RandomApply([color_jitter], p=0.8),
+         transforms.RandomGrayscale(p=0.2),
+         #GaussianBlur(kernel_size=int(0.1 * 32)),
+         transforms.ToTensor(),
+         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+    transform_test = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+    '''
+    transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
              transforms.RandomCrop(32, padding=4),
              transforms.RandomHorizontalFlip(),
-             transforms.RandomApply([color_jitter], p=0.8),
-             transforms.RandomGrayscale(p=0.2),
-             #GaussianBlur(kernel_size=int(0.1 * 32)),
              transforms.ToTensor(),
              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
-        transform_test = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+    transform_test = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])   
+    
+    trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
+                                            download=True, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
+                                              shuffle=True, num_workers=args.workers)
 
-        trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
-                                                download=True, transform=MultiViewDataInjector([transform_train, transform_train]))
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
-                                                  shuffle=True, num_workers=args.workers)
-
-        testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
-                                               download=True, transform=transform_test)
-        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
-                                                 shuffle=False, num_workers=args.workers)
+    testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
+                                           download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
+                                             shuffle=False, num_workers=args.workers)
     classes = ('plane', 'car', 'bird', 'cat',
                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 

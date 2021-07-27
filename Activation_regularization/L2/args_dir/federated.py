@@ -60,6 +60,9 @@ def parse_arguments():
         "--data_unbalanced", action='store_true', help="create unbalanced client data"
     )
     parser.add_argument(
+    "--t_sne", action='store_true', help="save t_sne graph"
+    )
+    parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
     )
     parser.add_argument(
@@ -233,6 +236,14 @@ def parse_arguments():
         type=int,
  
         help="print frequency (default: 1)",
+    )
+    parser.add_argument(
+        
+        "--t_sne_freq",
+        default=1,
+        type=int,
+ 
+        help="print t_sne graph frequency (default: 1)",
     )
 
 
