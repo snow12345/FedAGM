@@ -11,6 +11,15 @@ import copy
 import torch
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+
+
+
+def get_activation(name,activation):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+    return hook
+
+
 def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     model = get_model(args)
     model.to(device)
@@ -69,14 +78,16 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 first=True
                 with torch.no_grad():
                     for data in testloader:
+                        activation = {}
+                        model.layer4.register_forward_hook(get_activation('layer4',activation))
                         images, labels = data[0].to(device), data[1].to(device)
                         outputs = model(images)
                         if first:
-                            features=outputs
+                            features=activation['layer4'].view(len(images),-1)
                             saved_labels=labels
                             first=False
                         else:
-                            features=torch.cat((features,outputs))
+                            features=torch.cat((features,activation['layer4'].view(len(images),-1)))
                             saved_labels=torch.cat((saved_labels,labels))
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)

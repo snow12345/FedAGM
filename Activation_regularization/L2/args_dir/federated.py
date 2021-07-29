@@ -69,7 +69,10 @@ def parse_arguments():
         "--method", help="method to use", default="Fedavg"
         #'Fedavg''l2_act_reg''FedProx''PodNet'
     )  
-
+    parser.add_argument(
+        "--loss", help="loss to use", default="CE"
+        #'CE','IL'
+    )  
     
     
     parser.add_argument(

@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from utils import DatasetSplit
+from utils import DatasetSplit,IL
 import torch
 from local_update_method.global_and_online_model import *
 
@@ -10,7 +10,10 @@ class LocalUpdate(object):
         self.lr=lr
         self.local_epoch=local_epoch
         self.device=device
-        self.loss_func = nn.CrossEntropyLoss()
+        if args.loss=='CE':
+            self.loss_func=nn.CrossEntropyLoss()
+        elif args.loss in ('IL','Individual_loss'):
+            self.loss_func=IL(device=device)
         self.selected_clients = []
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
         self.alpha=alpha
