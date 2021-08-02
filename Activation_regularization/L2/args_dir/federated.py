@@ -63,6 +63,10 @@ def parse_arguments():
     "--t_sne", action='store_true', help="save t_sne graph"
     )
     parser.add_argument(
+    "--l2_norm", action='store_true',
+    )
+    
+    parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
     )
     parser.add_argument(

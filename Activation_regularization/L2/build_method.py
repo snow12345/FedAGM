@@ -20,6 +20,8 @@ def build_local_update_module(args):
         from local_update_method.base_byol import LocalUpdate
     elif args.method == 'FedCSAM':
         from local_update_method.FedCSAM import LocalUpdate
+    elif args.method == 'FedPReg_and_PodNet':
+        from local_update_method.proxy_reg_And_podnet import LocalUpdate    
     else:
         assert False
 
