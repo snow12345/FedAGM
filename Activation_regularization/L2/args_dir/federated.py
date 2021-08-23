@@ -62,10 +62,7 @@ def parse_arguments():
     parser.add_argument(
     "--t_sne", action='store_true', help="save t_sne graph"
     )
-    parser.add_argument(
-    "--l2_norm", action='store_true',
-    )
-    
+
     parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
     )
@@ -139,6 +136,13 @@ def parse_arguments():
         type=int,
         metavar="N",
         help="number of local epochs to run on each global epoch",
+    )
+    parser.add_argument(
+        "--image_epochs",
+        default=500,
+        type=int,
+        metavar="N",
+        help="number of epochs for image gradient ascent",
     )
     parser.add_argument(
         "--num_of_clients",
@@ -416,7 +420,40 @@ def parse_arguments():
         help="Used in LSC Loss",
     )
 
+    
+    ##proto
+    parser.add_argument(
+    "--num_img",
+    default=10,
+    type=int,
 
+    help="num of common generated images",
+    )
+    
+    parser.add_argument(
+    "--alpha_proto",
+    default=0.0,
+    type=float,
+
+    help="federated generated image activation regularization hyperparameter alpha_proto",
+    )
+    parser.add_argument(
+    "--cealpha_proto",
+    default=1.0,
+    type=float,
+
+    help="federated ce loss ratio hyperparameter cealpha_proto",
+    )
+    parser.add_argument(
+        "--alpha_proto_mul_epoch",
+        action="store_true",
+        help="Whether or not to multiplicate alpha_proto with epoch",
+    )
+    parser.add_argument(
+        "--alpha_proto_divide_epoch",
+        action="store_true",
+        help="Whether or not to divide alpha_proto by epoch",
+    )
     ## byol
     parser.add_argument('--rampup_length', default=200, type=int)
     parser.add_argument('--rampup_coefficient', type=float, default=5)
