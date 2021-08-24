@@ -13,7 +13,7 @@ class LocalUpdate(object):
         if args.loss=='CE':
             self.loss_func=nn.CrossEntropyLoss()
         elif args.loss in ('IL','Individual_loss'):
-            self.loss_func=IL(device=device)
+            self.loss_func=IL(device=device,gap=args.thres,abs_thres=args.abs_thres)
         self.selected_clients = []
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
         self.alpha=alpha

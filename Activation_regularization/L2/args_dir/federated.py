@@ -457,6 +457,24 @@ def parse_arguments():
     ## byol
     parser.add_argument('--rampup_length', default=200, type=int)
     parser.add_argument('--rampup_coefficient', type=float, default=5)
+    
+    
+    ##IL
+    parser.add_argument(
+    "--abs_thres",
+    action="store_true",
+    help="Whether or not to use absolute threshold",
+)
+    parser.add_argument(
+    "--thres",
+    default=0.5,
+    type=float,
+
+    help="Threshold of IL",
+    )
+    
+    
+    
     '''
 
     parser.add_argument(
