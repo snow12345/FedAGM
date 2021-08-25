@@ -16,12 +16,16 @@ class IL():
         onehot=(torch.eye(10)[labels]).to(self.device)
         p_of_answer=(sigmoid*onehot).sum(axis=1)
 
-        extend_p_of_answer=(self.gap*p_of_answer).unsqueeze(dim=1).expand(outputs.shape)
+        extend_p_of_answer=(p_of_answer*self.gap).unsqueeze(dim=1).expand(outputs.shape)
         if self.abs_thres==True:
             bigger_than_answer=(sigmoid>(self.gap))*(1-onehot)
+            print("sigmoid",sigmoid[0])
+            print("bigger_than_answer",bigger_than_answer[0])
         else:
-            bigger_than_answer=(sigmoid>(extend_p_of_answer-self.gap))*(1-onehot)
-        s=(((1-p_of_answer)**2))+(((sigmoid*bigger_than_answer)**2).sum(dim=1))/(bigger_than_answer.sum(dim=1)+1e-10)
+            bigger_than_answer=(sigmoid>(extend_p_of_answer))*(1-onehot)
+        pos=(((1-p_of_answer)**2))
+        neg=(((sigmoid*bigger_than_answer)**2).sum(dim=1))/9##((bigger_than_answer.sum(dim=1)+1e-10))
+        s=pos+neg
         
         s=s.sum()
         if self.mean==True:
