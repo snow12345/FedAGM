@@ -5,8 +5,6 @@ from utils import DatasetSplit,IL
 import torch
 from local_update_method.global_and_online_model import *
 
-
-
 class LocalUpdate(object):
     def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None, alpha=0.0):
         self.lr=lr
@@ -26,11 +24,22 @@ class LocalUpdate(object):
         #model=dual_model(self.args,net,net)
         model = net
         # train and update
+        
+        
+        s=copy.deepcopy(model.state_dict())
+        for key in s:
+            s[key]=s[key].sign()
+        
+        
         optimizer = optim.SGD(model.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
         epoch_loss = []
         for iter in range(self.local_epoch):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
+                
+                
+                
+                
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
                 log_probs = model(images)
@@ -39,5 +48,13 @@ class LocalUpdate(object):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step()
                 batch_loss.append(loss.item())
+                
+                with torch.no_grad():
+                    ss=model.state_dict()
+                    for key in ss:
+                        ss[key]=ss[key]*(ss[key].sign()==s[key])
+                    model.load_state_dict(ss)
+
+                
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)

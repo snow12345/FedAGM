@@ -62,7 +62,12 @@ def parse_arguments():
     parser.add_argument(
     "--t_sne", action='store_true', help="save t_sne graph"
     )
-
+    parser.add_argument(
+    "--umap", action='store_true', help="save umap"
+    )
+    parser.add_argument(
+        "--umap_dim", default=2, type=int, help="umap figure dimensions "
+    )
     parser.add_argument(
         "--project", help="data setting to use", default="federated_learning"
     )
@@ -256,7 +261,14 @@ def parse_arguments():
  
         help="print t_sne graph frequency (default: 1)",
     )
-
+    parser.add_argument(
+        
+        "--umap_freq",
+        default=1,
+        type=int,
+ 
+        help="print umap graph frequency (default: 1)",
+    )
 
     ### Method Hyperparameters
 

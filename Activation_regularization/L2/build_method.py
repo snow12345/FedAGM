@@ -3,6 +3,8 @@ def build_local_update_module(args):
     #    from local_update_set.base import LocalUpdate as LocalUpdateModule
     if args.method == 'Fedavg':
         from local_update_method.base import LocalUpdate
+    elif args.method == 'Fedavg_sign':
+        from local_update_method.base_sign import LocalUpdate
     elif args.method == 'Fedavg_temp':
         from local_update_method.base_temp import LocalUpdate
     elif args.method == 'Fedavg_learn_wrong':

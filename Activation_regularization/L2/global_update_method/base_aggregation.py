@@ -11,8 +11,96 @@ import copy
 import torch
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+from utils import DatasetSplit
+from global_update_method.distcheck import check_data_distribution
+import umap.umap_ as umap
+from mpl_toolkits import mplot3d
+from sklearn import metrics
+from mlxtend.plotting import plot_confusion_matrix
+from torch.utils.data import DataLoader
+
+classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 
+
+def log_ConfusionMatrix_Umap(model,testloader,args,wandb_dict,name):
+    model.eval()
+    device=next(model.parameters()).device
+    first=True
+    with torch.no_grad():
+        for data in testloader:
+            activation = {}
+            model.layer4.register_forward_hook(get_activation('layer4',activation))
+            images, labels = data[0].to(device), data[1].to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            if first:
+                features=activation['layer4'].view(len(images),-1)
+                saved_labels=labels
+                saved_pred=predicted
+                first=False
+            else:
+                features=torch.cat((features,activation['layer4'].view(len(images),-1)))
+                saved_labels=torch.cat((saved_labels,labels))
+                saved_pred=torch.cat((saved_pred,predicted))
+
+
+        
+
+        saved_labels=saved_labels.cpu()
+        saved_pred=saved_pred.cpu()
+
+        #plt.figure()
+        f1=metrics.f1_score(saved_labels,saved_pred,average='weighted')
+        acc=metrics.accuracy_score(saved_labels,saved_pred)
+        cm=metrics.confusion_matrix(saved_labels,saved_pred)
+        wandb_dict[name+" f1"]=f1
+        wandb_dict[name+" acc"]=acc
+        plt.figure(figsize=(20,20))
+        #wandb_dict[args.mode+name+" f1"]=f1
+        #wandb_dict[args.mode+name+" acc"]=acc
+        fig, ax=plot_confusion_matrix(cm,class_names=classes,
+                                colorbar=True,
+                                show_absolute=False,
+                                show_normed=True,
+                                figsize=(16,16)
+                                )
+        ax.margins(2,2)
+
+
+        
+        
+        wandb_dict[name+" confusion_matrix"]=wandb.Image(fig)
+        
+        
+        y_test = np.asarray(saved_labels.cpu())
+
+        reducer=umap.UMAP(n_components=args.umap_dim)
+        embedding=reducer.fit_transform(features.cpu())
+
+
+
+        plt.figure(figsize=(20,20))
+        
+
+        if args.umap_dim==3:
+            ax=plt.axes(projection=('3d'))
+        else:
+            ax=plt.axes()
+
+        for i in range(len(classes)):
+            y_i = (y_test == i)
+            scatter_input=[embedding[y_i,k] for k in range(args.umap_dim)]
+            ax.scatter(*scatter_input, label=classes[i])
+        plt.legend(loc=4)
+        plt.gca().invert_yaxis()
+
+        wandb_dict[name+" umap"]=wandb.Image(plt)
+
+
+
+    model.train()
+    return acc
 
 def get_activation(name,activation):
     def hook(model, input, output):
@@ -44,16 +132,38 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         m = max(int(args.participation_rate * args.num_of_clients), 1)
         selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
         print(f"This is global {epoch} epoch")
-        for user in selected_user:
+                        
+                        
+        if (args.umap==True) and (epoch%args.umap_freq==0):
+            if epoch % args.print_freq == 0:                        
+                global_acc=log_ConfusionMatrix_Umap(copy.deepcopy(model),testloader,args,wandb_dict,name="global model_before local training")                        
+                        
+                        
+        for client_idx,user in enumerate(selected_user):
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
             weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
-                                      
+            client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
+            data_distribution=check_data_distribution(client_ldr_train)
+                        
+            
+            if (args.umap==True) and (epoch%args.umap_freq==0):
+                if epoch % args.print_freq == 0:
+                    name="client"+str(client_idx)
+                    plt.figure(figsize=(20,20))
+                    plt.bar(range(len(data_distribution)),data_distribution)
+                    wandb_dict[name+"data_distribution"]=wandb.Image(plt)
+                    this_model=copy.deepcopy(model)
+                    this_model.load_state_dict(weight)
+                    log_ConfusionMatrix_Umap(this_model,testloader,args,wandb_dict,name=name)                             
+                        
+                        
+                        
         total_num_of_data_clients=sum(num_of_data_clients)
-                                       
+                                     
         
         FedAvg_weight = copy.deepcopy(local_weight[0])
         for key in FedAvg_weight.keys():
@@ -107,7 +217,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             
             plt.figure(figsize = (16,12))
 
-            classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
             for i in range(len(classes)):
                 y_i = (y_test == i)
 
@@ -120,7 +230,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             
             
             model.train()
+
         else:
+            pass
+            '''
             if epoch % args.print_freq == 0:
                 model.eval()
                 correct = 0
@@ -138,10 +251,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 acc_train.append(100 * correct / float(total))
 
             model.train()            
-        
+            '''
         
         wandb_dict[args.mode + '_loss']= loss_avg
-        wandb_dict[args.mode + "_acc"]=acc_train[-1]
+        #wandb_dict[args.mode + "_acc"]=acc_train[-1]
         wandb_dict['lr']=this_lr
         wandb.log(wandb_dict)
 
@@ -152,11 +265,6 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             this_alpha = args.alpha / (epoch + 1)
 
 
-    print('loss_train')
-    print(loss_train)
-
-    print('acc_train')
-    print(acc_train)
 
 
 # In[ ]:

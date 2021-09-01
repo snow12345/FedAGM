@@ -42,7 +42,7 @@ class DatasetSplitMultiView(Dataset):
 
 def get_dataset(args, trainset, mode='iid'):
     directory = args.client_data + '/' + args.set + '/' + ('un' if args.data_unbalanced==True else '') + 'balanced'
-    filepath=directory+'/' + mode + (str(args.dirichlet_alpha) if mode == 'dirichlet' else '') + '.txt'
+    filepath=directory+'/' + mode + (str(args.dirichlet_alpha) if mode == 'dirichlet' else '') + '_clients' +str(args.num_of_clients) +'.txt'
     check_already_exist = os.path.isfile(filepath) and (os.stat(filepath).st_size != 0)
     create_new_client_data = not check_already_exist or args.create_client_dataset
     print("create new client data: " + str(create_new_client_data))
