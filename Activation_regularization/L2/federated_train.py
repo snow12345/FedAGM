@@ -81,13 +81,13 @@ if args.set == 'CIFAR10':
             [
                 transforms.ToTensor(),
                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
-    
 
-    
-    trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
-                                            download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
-                                              shuffle=True, num_workers=args.workers)
+
+        trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
+                                                download=True,
+                                                transform=MultiViewDataInjector([transform_train, transform_train]))
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
+                                                  shuffle=True, num_workers=args.workers)
 
     testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
                                            download=True, transform=transform_test)
