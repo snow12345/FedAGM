@@ -20,7 +20,41 @@ from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
 
 classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+def log_acc(model,testloader,args,wandb_dict,name):
+    model.eval()
+    device=next(model.parameters()).device
+    first=True
+    with torch.no_grad():
+        for data in testloader:
+            activation = {}
+            model.layer4.register_forward_hook(get_activation('layer4',activation))
+            images, labels = data[0].to(device), data[1].to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            if first:
+                features=activation['layer4'].view(len(images),-1)
+                saved_labels=labels
+                saved_pred=predicted
+                first=False
+            else:
+                features=torch.cat((features,activation['layer4'].view(len(images),-1)))
+                saved_labels=torch.cat((saved_labels,labels))
+                saved_pred=torch.cat((saved_pred,predicted))
 
+
+        
+
+        saved_labels=saved_labels.cpu()
+        saved_pred=saved_pred.cpu()
+
+        f1=metrics.f1_score(saved_labels,saved_pred,average='weighted')
+        acc=metrics.accuracy_score(saved_labels,saved_pred)
+        wandb_dict[name+" f1"]=f1
+        wandb_dict[name+" acc"]=acc
+
+        
+    model.train()
+    return acc
 
 
 def log_ConfusionMatrix_Umap(model,testloader,args,wandb_dict,name):
@@ -75,7 +109,7 @@ def log_ConfusionMatrix_Umap(model,testloader,args,wandb_dict,name):
         
         y_test = np.asarray(saved_labels.cpu())
 
-        reducer=umap.UMAP(n_components=args.umap_dim)
+        reducer=umap.UMAP(random_state=0,n_components=args.umap_dim)
         embedding=reducer.fit_transform(features.cpu())
 
 
@@ -122,15 +156,17 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     acc_train = []
     this_lr = args.lr
     this_alpha = args.alpha
-    
+    m = max(int(args.participation_rate * args.num_of_clients), 1)
 
     for epoch in range(args.global_epochs):
         wandb_dict={}
         num_of_data_clients=[]
         local_weight = []
         local_loss = []
-        m = max(int(args.participation_rate * args.num_of_clients), 1)
-        selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
+        if (epoch==0) or (args.participation_rate<1) :
+            selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
+        else:
+            pass 
         print(f"This is global {epoch} epoch")
                         
                         
@@ -139,7 +175,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 global_acc=log_ConfusionMatrix_Umap(copy.deepcopy(model),testloader,args,wandb_dict,name="global model_before local training")                        
                         
                         
-        for client_idx,user in enumerate(selected_user):
+        for user in selected_user:
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
@@ -147,17 +183,23 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
             client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
-            data_distribution=check_data_distribution(client_ldr_train)
                         
             
             if (args.umap==True) and (epoch%args.umap_freq==0):
                 if epoch % args.print_freq == 0:
-                    name="client"+str(client_idx)
-                    plt.figure(figsize=(20,20))
-                    plt.bar(range(len(data_distribution)),data_distribution)
-                    wandb_dict[name+"data_distribution"]=wandb.Image(plt)
+                    name="client"+str(user)
+                    if (epoch==0) or (args.participation_rate<=1) :
+                        
+                        data_distribution=check_data_distribution(client_ldr_train)
+                        plt.figure(figsize=(20,20))
+                        plt.bar(range(len(data_distribution)),data_distribution)
+                        wandb_dict[name+"data_distribution"]=wandb.Image(plt)                        
+                    else:
+                        pass 
+                    wandb_dict[name+"local loss"]=loss
                     this_model=copy.deepcopy(model)
                     this_model.load_state_dict(weight)
+                    log_acc(this_model,client_ldr_train,args,wandb_dict,name=name+" local")  
                     log_ConfusionMatrix_Umap(this_model,testloader,args,wandb_dict,name=name)                             
                         
                         
