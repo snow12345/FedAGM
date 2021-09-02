@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from utils import DatasetSplit,IL
+from utils import DatasetSplit,IL,IL_negsum
 import torch
 from local_update_method.global_and_online_model import *
 
@@ -16,6 +16,8 @@ class LocalUpdate(object):
             self.loss_func=nn.CrossEntropyLoss()
         elif args.loss in ('IL','Individual_loss'):
             self.loss_func=IL(device=device,gap=args.thres,abs_thres=args.abs_thres)
+        elif args.loss=='IL_negsum':
+            self.loss_func=IL_negsum(device=device,gap=args.thres,abs_thres=args.abs_thres)
         self.selected_clients = []
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
         self.alpha=alpha

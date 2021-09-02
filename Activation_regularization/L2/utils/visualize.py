@@ -104,12 +104,14 @@ def log_ConfusionMatrix_Umap(model, testloader, args, classes, wandb_dict, name)
         ax.margins(2, 2)
 
         wandb_dict[name + " confusion_matrix"] = wandb.Image(fig)
-
+        plt.close()
         y_test = np.asarray(saved_labels.cpu())
 
         reducer = umap.UMAP(random_state=0, n_components=args.umap_dim)
         embedding = reducer.fit_transform(features.cpu())
-
+        
+        
+        ##################### plot ground truth #######################
         plt.figure(figsize=(20, 20))
 
         if args.umap_dim == 3:
@@ -125,7 +127,29 @@ def log_ConfusionMatrix_Umap(model, testloader, args, classes, wandb_dict, name)
         plt.gca().invert_yaxis()
 
         wandb_dict[name + " umap"] = wandb.Image(plt)
+        plt.close()
+        
+        
+        
+        ############### plot model predicted class ###########################
+        plt.figure(figsize=(20, 20))
 
+        if args.umap_dim == 3:
+            ax = plt.axes(projection=('3d'))
+        else:
+            ax = plt.axes()
+
+        for i in range(len(classes)):
+            y_i =(np.asarray(saved_pred.cpu()) == i)
+            scatter_input = [embedding[y_i, k] for k in range(args.umap_dim)]
+            ax.scatter(*scatter_input, label=classes[i])
+        plt.legend(loc=4)
+        plt.gca().invert_yaxis()
+
+        wandb_dict[name + " umap_model predicted class"] = wandb.Image(plt)
+        plt.close()        
+        
+        
     model.train()
     return acc
 
