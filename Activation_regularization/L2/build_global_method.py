@@ -30,7 +30,9 @@ def build_global_update_module(args):
     elif args.global_method == 'global_proto_soft':
         from global_update_method.base_aggregation_proto_soft import GlobalUpdate        
     elif args.global_method == 'global_protoserver':
-        from global_update_method.base_aggregation_protoserver import GlobalUpdate        
+        from global_update_method.base_aggregation_protoserver import GlobalUpdate
+    elif args.global_method == 'FedDyn':
+        from global_update_method.delta_aggregation_fedDyn import GlobalUpdate
     else:
         assert False
 

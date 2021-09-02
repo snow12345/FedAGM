@@ -51,7 +51,9 @@ def build_local_update_module(args):
     elif args.method == 'FedPReg_and_PodNet_proto_noce':
         from local_update_method.proxy_reg_And_podnet_proto_noce import LocalUpdate    
     elif args.method == 'FedPReg_and_PodNet_proto_DACM':
-        from local_update_method.proxy_reg_And_podnet_DACM import LocalUpdate   
+        from local_update_method.proxy_reg_And_podnet_DACM import LocalUpdate
+    elif args.method == 'FedDyn':
+        from local_update_method.fedDyn import LocalUpdate
     else:
         assert False
 
