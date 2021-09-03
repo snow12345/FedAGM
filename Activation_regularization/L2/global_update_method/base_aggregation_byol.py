@@ -10,7 +10,7 @@ from torch import nn
 import copy
 import torch
 from models.mlp_head import MLPHead
-from utils import log_ConfusionMatrix_Umap, log_acc
+from utils import log_ConfusionMatrix_Umap, log_acc, get_activation
 import matplotlib.pyplot as plt
 from global_update_method.distcheck import check_data_distribution_aug
 from utils import DatasetSplitMultiView

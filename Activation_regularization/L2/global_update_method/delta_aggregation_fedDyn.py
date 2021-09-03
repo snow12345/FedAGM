@@ -9,7 +9,15 @@ import numpy as np
 from torch import nn
 import copy
 import torch
+from utils import log_ConfusionMatrix_Umap, log_acc, get_activation
+from global_update_method.distcheck import check_data_distribution_aug
 
+import matplotlib.pyplot as plt
+from utils import DatasetSplit
+from global_update_method.distcheck import check_data_distribution
+from torch.utils.data import DataLoader
+
+classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
     model = get_model(args)
@@ -39,7 +47,10 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
         local_g[key] = torch.zeros_like(local_g[key]).to('cpu')
     local_deltas = {net_i: copy.deepcopy(local_g) for net_i in range(args.num_of_clients)}
 
+    m = max(int(args.participation_rate * args.num_of_clients), 1)
+
     for epoch in range(args.global_epochs):
+        wandb_dict = {}
         num_of_data_clients = []
         local_K = []
 
@@ -48,9 +59,17 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
         local_delta = []
         # print('global delta of linear weight', global_delta['linear.weight'])
         global_weight = copy.deepcopy(model.state_dict())
-        m = max(int(args.participation_rate * args.num_of_clients), 1)
-        selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
+        if (epoch == 0) or (args.participation_rate < 1):
+            selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
+        else:
+            pass
         print(f"This is global {epoch} epoch")
+
+        if (args.umap == True) and (epoch % args.umap_freq == 0):
+            if epoch % args.print_freq == 0:
+                global_acc = log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, classes, wandb_dict,
+                                                      name="global model_before local training")
+
         for user in selected_user:
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
@@ -66,6 +85,28 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             for key in weight.keys():
                 delta[key] = weight[key].to('cpu') - global_weight[key]
             local_delta.append(delta)
+
+            client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size,
+                                          shuffle=True)
+
+            if (args.umap == True) and (epoch % args.umap_freq == 0):
+                if epoch % args.print_freq == 0:
+                    name = "client" + str(user)
+                    if (epoch == 0) or (args.participation_rate < 1):
+
+                        data_distribution = check_data_distribution(client_ldr_train)
+                        plt.figure(figsize=(20, 20))
+                        plt.bar(range(len(data_distribution)), data_distribution)
+                        wandb_dict[name + "data_distribution"] = wandb.Image(plt)
+                        plt.close()
+                    else:
+                        pass
+                    wandb_dict[name + "local loss"] = loss
+                    this_model = copy.deepcopy(model)
+                    this_model.load_state_dict(weight)
+                    log_acc(this_model, client_ldr_train, args, wandb_dict, name=name + " local")
+                    log_ConfusionMatrix_Umap(this_model, testloader, args, classes, wandb_dict, name=name)
+
 
         total_num_of_data_clients = sum(num_of_data_clients)
         FedAvg_weight = copy.deepcopy(local_weight[0])
@@ -116,11 +157,13 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             print('Accuracy of the network on the 10000 test images: %f %%' % (
                     100 * correct / float(total)))
             acc_train.append(100 * correct / float(total))
+            model = model.to('cpu')
+            model.train()
 
-        model.train()
-        model = model.to('cpu')
 
-        wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1], 'lr': this_lr})
+        wandb_dict[args.mode + '_loss'] = loss_avg
+        wandb_dict['lr'] = this_lr
+        wandb.log(wandb_dict)
 
         this_lr *= args.learning_rate_decay
         if args.alpha_mul_epoch == True:

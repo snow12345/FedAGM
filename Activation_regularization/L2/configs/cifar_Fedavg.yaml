@@ -1,5 +1,5 @@
 #architecture
-arch: CNN
+weight_decay: 1e-3 
 
 
 
