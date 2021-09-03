@@ -54,7 +54,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
         if (args.umap == True) and (epoch % args.umap_freq == 0):
             if epoch % args.print_freq == 0:
-                global_acc = log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, classes, wandb_dict,
+                global_acc = log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, wandb_dict,
                                                       name="global model_before local training")
 
 
@@ -85,7 +85,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                     this_model = copy.deepcopy(model)
                     this_model.load_state_dict(weight)
                     #log_acc(this_model, client_ldr_train, args, wandb_dict, name=name + " local")
-                    log_ConfusionMatrix_Umap(this_model, testloader, args, classes, wandb_dict, name=name)
+                    log_ConfusionMatrix_Umap(this_model, testloader, args, wandb_dict, name=name)
 
         FedAvg_weight = copy.deepcopy(local_weight[0])
         for key in FedAvg_weight.keys():

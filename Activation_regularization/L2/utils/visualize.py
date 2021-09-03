@@ -59,7 +59,17 @@ def log_acc(model, testloader, args, wandb_dict, name):
     return acc
 
 
-def log_ConfusionMatrix_Umap(model, testloader, args, classes, wandb_dict, name):
+def log_ConfusionMatrix_Umap(model, testloader, args, wandb_dict, name):
+    if args.set == 'CIFAR10':
+        classes=['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    elif args.set == 'MNIST':
+        classes=['0','1','2','3','4','5','6','7','8','9']
+    else:
+        pass
+    
+    
+    
+    
     model.eval()
     device = next(model.parameters()).device
     first = True

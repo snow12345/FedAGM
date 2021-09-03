@@ -18,12 +18,11 @@ from mpl_toolkits import mplot3d
 from sklearn import metrics
 from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
-from utils import log_ConfusionMatrix_Umap, log_acc, get_activation
-from global_update_method.distcheck import check_data_distribution_aug
+from utils import log_ConfusionMatrix_Umap, log_acc
 
 
 
-classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+#classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 
 def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
@@ -56,7 +55,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                         
         if (args.umap==True) and (epoch%args.umap_freq==0):
             if epoch % args.print_freq == 0:                        
-                global_acc=log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, classes, wandb_dict,
+                global_acc=log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, wandb_dict,
                                                       name="global model_before local training")
                         
                         
@@ -86,7 +85,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                     this_model=copy.deepcopy(model)
                     this_model.load_state_dict(weight)
                     log_acc(this_model,client_ldr_train,args,wandb_dict,name=name+" local")  
-                    log_ConfusionMatrix_Umap(this_model, testloader, args, classes, wandb_dict, name=name)      
+                    log_ConfusionMatrix_Umap(this_model, testloader, args, wandb_dict, name=name)      
                     
                         
                         
