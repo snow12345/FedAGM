@@ -79,7 +79,9 @@ def parse_arguments():
         "--loss", help="loss to use", default="CE"
         #'CE','IL'
     )  
-    
+    parser.add_argument(
+    "--hard_aug", action='store_true', help="use hard data augmentation?"
+    )    
     
     parser.add_argument(
         "--global_method", help="aggregation method to use", default="global_avg"

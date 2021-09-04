@@ -44,7 +44,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 ## Build Dataset
 if args.set == 'CIFAR10':
     
-    if args.method not in ['byol','simsiam']:
+    if (args.method not in ['byol','simsiam']) and (args.hard_aug==False):
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
              transforms.RandomCrop(32, padding=4),
