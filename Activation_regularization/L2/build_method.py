@@ -3,7 +3,7 @@ def build_local_update_module(args):
     #    from local_update_set.base import LocalUpdate as LocalUpdateModule
     if args.method == 'Fedavg':
         from local_update_method.base import LocalUpdate
-    if args.method == 'Fedavg_fcshallow':
+    elif args.method == 'Fedavg_fcshallow':
         from local_update_method.base_fcshallow import LocalUpdate
     elif args.method == 'Fedavg_sign':
         from local_update_method.base_sign import LocalUpdate

@@ -64,6 +64,8 @@ def log_ConfusionMatrix_Umap(model, testloader, args, wandb_dict, name):
         classes=['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
     elif args.set == 'MNIST':
         classes=['0','1','2','3','4','5','6','7','8','9']
+    elif args.set == 'CIRAR100':
+        classes= list(str(i) for i in range(100))
     else:
         pass
     
