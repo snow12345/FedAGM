@@ -78,7 +78,7 @@ def log_ConfusionMatrix_Umap(model, testloader, args, wandb_dict, name):
             activation = {}
             model.layer4.register_forward_hook(get_activation('layer4', activation))
             images, labels = data[0].to(device), data[1].to(device)
-            if 'byol' in args.method:
+            if 'byol' in args.method or 'simsiam' in args.method:
                 _, outputs = model(images)
             else:
                 outputs = model(images)
