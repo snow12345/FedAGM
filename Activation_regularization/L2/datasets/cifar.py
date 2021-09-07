@@ -83,7 +83,7 @@ def cifar_dirichlet_unbalanced(dataset, n_nets, alpha=0.5):
     '''
     #elif partition == "hetero-dir":
     min_size = 0
-    K = 10
+    K = len(dataset.class_to_idx)
     N=len(dataset)
     N = y_train.shape[0]
     net_dataidx_map = {i: np.array([],dtype='int64') for i in range(n_nets)}
@@ -118,7 +118,7 @@ def cifar_dirichlet_balanced(dataset, n_nets, alpha=0.5):
     n_train = len(dataset)
 
     min_size = 0
-    K = 10
+    K = len(dataset.class_to_idx)
     N=len(dataset)
     N = y_train.shape[0]
     print(N)
