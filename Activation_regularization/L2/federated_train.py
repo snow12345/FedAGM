@@ -42,8 +42,13 @@ random.seed(random_seed)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Build Dataset
+<<<<<<< HEAD
 if args.set in ['CIFAR10','CIFAR100']:
     normalize=transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)) if args.set=='CIFAR10' else transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+=======
+if args.set == 'CIFAR10':
+    
+>>>>>>> ebcd282784c1ef71778da6d7d1ebb6754210aa66
     if (args.method not in ['byol','simsiam', 'byol_ema']) and (args.hard_aug==False):
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
@@ -54,7 +59,14 @@ if args.set in ['CIFAR10','CIFAR100']:
              ])
 
 
+<<<<<<< HEAD
 
+=======
+        testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
+                                               download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
+                                                 shuffle=False, num_workers=args.workers)
+>>>>>>> ebcd282784c1ef71778da6d7d1ebb6754210aa66
     elif (args.method not in ['byol','simsiam', 'byol_ema']) and (args.hard_aug==True):
         color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
         transform_train = transforms.Compose(
