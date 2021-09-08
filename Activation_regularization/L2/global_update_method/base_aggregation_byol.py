@@ -160,7 +160,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 with torch.no_grad():
                     for data in testloader:
                         images, labels = data[0].to(device), data[1].to(device)
-                        outputs = model(images)
+                        if 'byol' in args.method or 'simsiam' in args.method:
+                            _, outputs = model(images)
+                        else:
+                            outputs = model(images)
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)
                         correct += (predicted == labels).sum().item()
