@@ -34,6 +34,8 @@ def build_local_update_module(args):
         from local_update_method.base_byol_ema import LocalUpdate
     elif args.method == 'simsiam':
         from local_update_method.base_simsiam import LocalUpdate
+    elif args.method == 'byol_glob_online':
+        from local_update_method.base_byol_glob_online import LocalUpdate
     elif args.method == 'FedCSAM':
         from local_update_method.FedCSAM import LocalUpdate
     elif args.method == 'FedPReg_and_PodNet':
