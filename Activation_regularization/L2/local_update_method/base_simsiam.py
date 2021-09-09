@@ -25,8 +25,14 @@ class LocalUpdate(object):
         predictor = predictor
         # train and update
         w = self.args.rampup_coefficient * sigmoid_rampup(epoch, self.args.rampup_length)
-        
-        optimizer = optim.SGD(list(model.parameters()) + list(predictor.parameters()), lr=self.lr, momentum=self.args.momentum, weight_decay=self.args.weight_decay)
+
+        param_groups = [
+            {'params': list(set(model.parameters()))},
+            {'params': list(predictor.parameters()), 'lr': self.lr * self.args.p_lr_beta}
+        ]
+
+        optimizer = optim.SGD(param_groups, lr=self.lr, momentum=self.args.momentum,
+                              weight_decay=self.args.weight_decay)
         epoch_loss = []
         for iter in range(self.local_epoch):
             batch_loss = []

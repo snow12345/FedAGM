@@ -471,8 +471,18 @@ def parse_arguments():
     ## byol
     parser.add_argument('--rampup_length', default=200, type=int)
     parser.add_argument('--rampup_coefficient', type=float, default=5)
-    
-    
+
+    ## FedCM
+    parser.add_argument(
+        "--p_lr_beta",
+
+        default=1.0,
+        type=float,
+        metavar="N",
+        help="global learning rate",
+
+    )
+
     ##IL
     parser.add_argument(
     "--abs_thres",
