@@ -94,7 +94,7 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, online_target=False):
+    def forward(self, x, return_feature=False):
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)
         out = self.layer2(out)
@@ -103,18 +103,28 @@ class ResNet(nn.Module):
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         if self.l2_norm:
-            with torch.no_grad():
-                w = self.linear.weight.data.clone()
-                w = F.normalize(w, dim=1, p=2)
-                self.linear.weight.copy_(w)
+            #with torch.no_grad():
+                #w = self.linear.weight.data.clone()
+                #w = F.normalize(w, dim=1, p=2)
+                #self.linear.weight.copy_(w)
             #self.linear = F.normalize(self.linear)
-            #self.linear.weight.data = F.normalize(self.linear.weight.data, p=2, dim=1)
-            #out = F.normalize(out, dim=1)
-            out = self.linear(out)
+            self.linear.weight.data = F.normalize(self.linear.weight.data, p=2, dim=1)
+            out = F.normalize(out, dim=1)
+            logit = self.linear(out)
         else:
-            out = self.linear(out)
-        return out
-
+            logit = self.linear(out)
+            
+        if return_feature==True:
+            return out, logit
+        else:
+            return logit
+        
+    
+    def forward_classifier(self,x):
+        logit = self.linear(x)
+        return logit        
+    
+    
     def sync_online_and_global(self):
         state_dict=self.state_dict()
         for key in state_dict:

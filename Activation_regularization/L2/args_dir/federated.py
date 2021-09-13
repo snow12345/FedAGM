@@ -80,6 +80,9 @@ def parse_arguments():
         #'CE','IL'
     )  
     parser.add_argument(
+    "--return_feature", action='store_true', help="Do you need to make model forward return feature?"
+    )
+    parser.add_argument(
     "--hard_aug", action='store_true', help="use hard data augmentation?"
     )    
     
