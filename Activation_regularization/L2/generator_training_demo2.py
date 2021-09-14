@@ -203,7 +203,7 @@ for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복
             generator.eval()
 
             test_inputs = test_inputs.to(device)
-            synthetic = generator(inputs)
+            synthetic = generator(test_inputs)
 
             logits = net(synthetic)
             pred = logits.data.max(1)[1]

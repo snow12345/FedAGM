@@ -20,7 +20,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-wandb.init(entity='federated_learning', project=args.project, group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
+LOG_DIR = '/data2/geeho/fed/{}/{}/{}'.format(args.set,'centralized', args.method)
+if not os.path.exists('{}'.format(LOG_DIR)):
+    os.makedirs('{}'.format(LOG_DIR))
+
+wandb.init(entity='federated_learning', project=args.project, group="centralized",job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
 wandb.run.name=experiment_name
 wandb.run.save()
 wandb.config.update(args)
@@ -126,6 +130,7 @@ optimizer = get_optimizer(args, net.parameters())
 scheduler = get_scheduler(optimizer, args)
 loss_train = []
 acc_train=[]
+best_acc = 0
 
 ## Training
 for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복합니다.
@@ -164,6 +169,18 @@ for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복
 
             print('Accuracy of the network on the 10000 test images: %f %%' % (
                     100 * correct / total))
+
+        if best_acc < 100 * correct / total:
+            best_acc = 100 * correct / total
+
+            print('Best Accuracy of the network on the 10000 test images: %f %%' % (
+                    best_acc))
+
+            torch.save({'model_state_dict': net.state_dict()},
+                       '{}/{}_{}.pth'.format(LOG_DIR, args.additional_experiment_name if args.additional_experiment_name!='' else '', 'best')
+                       )
+
+
         acc_train.append(100 * correct / total)
 
         net.train()
