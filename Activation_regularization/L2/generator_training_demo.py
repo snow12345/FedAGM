@@ -188,7 +188,7 @@ for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복
     ## Get blurred image by gaussian kernel
     blurred_synthetic = gaussian_blur2d(synthetic.detach(), (3, 3), (1.5, 1.5))
 
-    prior_loss = ((synthetic - blurred_synthetic) ** 2).sum()
+    prior_loss = ((synthetic - blurred_synthetic) ** 2).sum() / args.batch_size
 
     total_loss = args.g1 * loss_one_hot + args.g2 * loss_information_entropy + args.g3 * prior_loss
 
