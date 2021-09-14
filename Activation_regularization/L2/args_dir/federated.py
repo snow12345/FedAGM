@@ -124,7 +124,7 @@ def parse_arguments():
 
     ## Training Config
     parser.add_argument(
-        "-a", "--arch", metavar="ARCH", default="CNN", help="model architecture"
+        "-a", "--arch", metavar="ARCH", default="ResNet18", help="model architecture"
     )
     parser.add_argument(
         "--global_epochs",

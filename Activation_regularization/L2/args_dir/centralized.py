@@ -125,8 +125,8 @@ def parse_arguments():
 
     parser.add_argument(
         "--cuda_visible_device",
-        default=0,
-        type=float,
+        default='0',
+        type=str,
         metavar="N",
         help="which GPU to use",
     )
@@ -164,13 +164,18 @@ def parse_arguments():
     parser.add_argument("--optimizer", help="Which optimizer to use", default="sgd")
     parser.add_argument("--set", help="name of dataset", type=str, default="CIFAR10")
     parser.add_argument(
-        "-a", "--arch", metavar="ARCH", default="CNN", help="model architecture"
+        "-a", "--arch", metavar="ARCH", default="ResNet18", help="model architecture"
     )
     parser.add_argument(
         "--config", help="Config file to use (see configs dir)", default=None
     )
     parser.add_argument(
         "--log-dir", help="Where to save the runs. If None use ./runs", default=None
+    )
+    parser.add_argument(
+        "--l2_norm",
+        action="store_true",
+        help="l2_norm classifier",
     )
 
     parser.add_argument(
@@ -199,7 +204,7 @@ def parse_arguments():
     parser.add_argument(
         "--wd",
         "--weight_decay",
-        default=0.0,
+        default=1e-3,
         type=float,
         metavar="W",
         help="weight decay (default: 0.0)",
@@ -230,7 +235,7 @@ def parse_arguments():
     parser.add_argument(
         "-j",
         "--workers",
-        default=20,
+        default=8,
         type=int,
         metavar="N",
         help="number of data loading workers (default: 20)",
@@ -249,6 +254,37 @@ def parse_arguments():
         type=float,
         metavar="N",
         help="number of participation rate at each global epoch",
+    )
+
+    parser.add_argument(
+        "--g1",
+        default=1,
+        type=float,
+        metavar="N",
+        help="generator ce",
+    )
+
+    parser.add_argument(
+        "--g2",
+        default=1,
+        type=float,
+        metavar="N",
+        help="generator information loss",
+    )
+
+    parser.add_argument(
+        "--g3",
+        default=1e-3,
+        type=float,
+        metavar="N",
+        help="generator prior loss",
+    )
+    parser.add_argument(
+        "--g_temp",
+        default=1e3,
+        type=float,
+        metavar="N",
+        help="generator prior loss",
     )
     '''
 
