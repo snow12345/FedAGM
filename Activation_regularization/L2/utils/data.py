@@ -6,7 +6,17 @@ from datasets.cifar import cifar_noniid, cifar_dirichlet_balanced,cifar_dirichle
 import torch.nn as nn
 
 
-__all__ = ['DatasetSplit', 'DatasetSplitMultiView', 'get_dataset', 'MultiViewDataInjector', 'GaussianBlur']
+__all__ = ['DatasetSplit', 'DatasetSplitMultiView', 'get_dataset', 'MultiViewDataInjector', 'GaussianBlur', 'TransformTwice'
+                                                                                                            ]
+
+class TransformTwice:
+    def __init__(self, transform):
+        self.transform = transform
+
+    def __call__(self, inp):
+        out1 = self.transform(inp)
+        out2 = self.transform(inp)
+        return out1, out2
 
 
 class DatasetSplit(Dataset):

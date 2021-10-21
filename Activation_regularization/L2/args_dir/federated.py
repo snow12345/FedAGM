@@ -134,6 +134,13 @@ def parse_arguments():
         help="number of total epochs to run",
     )
     parser.add_argument(
+        "--warmup_epoch",
+        default=1,
+        type=int,
+        metavar="N",
+        help="number of total epochs to run",
+    )
+    parser.add_argument(
         "--centralized_epochs",
         default=500,
         type=int,
@@ -336,7 +343,7 @@ def parse_arguments():
     ## l2-weight
     parser.add_argument(
         "--mu",
-        default=0.0,
+        default=0.01,
         type=float,
         metavar="N",
         help="federated weight regularization hyperparameter mu",
@@ -421,6 +428,14 @@ def parse_arguments():
 
     )
     parser.add_argument(
+        "--temp2",
+        default=1,
+        type=float,
+        metavar="N",
+        help="temperature",
+
+    )
+    parser.add_argument(
         "--l2_norm",
         action="store_true",
         help="l2_norm classifier",
@@ -499,8 +514,50 @@ def parse_arguments():
 
     help="Threshold of IL",
     )
+
+
+    ## Train Generator
+    parser.add_argument(
+        "--g_temp",
+        default=1e1,
+        type=float,
+        metavar="N",
+        help="generator prior loss",
+    )
+
+    parser.add_argument(
+        "--g1",
+        default=1,
+        type=float,
+        metavar="N",
+        help="generator ce",
+    )
+
+    parser.add_argument(
+        "--g2",
+        default=1,
+        type=float,
+        metavar="N",
+        help="generator information loss",
+    )
+
+    parser.add_argument(
+        "--g3",
+        default=1e-3,
+        type=float,
+        metavar="N",
+        help="generator prior loss",
+    )
     
-    
+    ###
+
+    parser.add_argument(
+        "--gamma",
+        default=1,
+        type=float,
+        metavar="N",
+        help="weight for nestrov",
+    )
     
     '''
 

@@ -46,9 +46,11 @@ def build_local_update_module(args):
     elif args.method == 'proto':
         from local_update_method.proto import LocalUpdate    
     elif args.method == 'KD_proto':
-        from local_update_method.KD_proto import LocalUpdate    
+        from local_update_method.KD_proto import LocalUpdate
+    elif args.method == 'KD_proto_generator':
+        from local_update_method.KD_proto_generator import LocalUpdate
     elif args.method == 'proto_scratch':
-        from local_update_method.proto_scratch import LocalUpdate            
+        from local_update_method.proto_scratch import LocalUpdate
     elif args.method == 'FedPReg_and_PodNet_proto_soft':
         from local_update_method.proxy_reg_And_podnet_proto_soft import LocalUpdate            
         
@@ -62,6 +64,9 @@ def build_local_update_module(args):
         from local_update_method.proxy_reg_And_podnet_DACM import LocalUpdate
     elif args.method == 'FedDyn':
         from local_update_method.fedDyn import LocalUpdate
+
+    elif args.method == 'FedNAG':
+        from local_update_method.fed_NAG import LocalUpdate
     else:
         assert False
 

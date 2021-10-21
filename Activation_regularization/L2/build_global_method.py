@@ -19,6 +19,8 @@ def build_global_update_module(args):
         from global_update_method.base_aggregation_byol import GlobalUpdate
     elif args.global_method == 'global_proto':
         from global_update_method.base_aggregation_proto import GlobalUpdate
+    elif args.global_method == 'global_proto_generator':
+        from global_update_method.base_aggregation_proto_generator import GlobalUpdate
     elif args.global_method == 'global_proto_separate':
         from global_update_method.base_aggregation_proto_separate import GlobalUpdate
     elif args.global_method == 'global_proto2':
@@ -33,6 +35,10 @@ def build_global_update_module(args):
         from global_update_method.base_aggregation_protoserver import GlobalUpdate
     elif args.global_method == 'FedDyn':
         from global_update_method.delta_aggregation_fedDyn import GlobalUpdate
+
+    elif args.global_method == 'FedNAG':
+        from global_update_method.delta_aggregation_NAG import GlobalUpdate
+
     else:
         assert False
 
