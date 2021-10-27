@@ -81,7 +81,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
-            weight, loss = local_setting.train(net=copy.deepcopy(sending_model).to(device))
+            weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_K.append(local_setting.K)
             #weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
@@ -203,6 +203,9 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             loss_func = nn.CrossEntropyLoss()
             prev_model = copy.deepcopy(model)
             prev_model.load_state_dict(global_weight)
+
+            avg_model = copy.deepcopy(model).eval()
+            avg_model.load_state_dict(FedAvg_weight)
             if epoch % args.print_freq == 0:
                 model.eval()
                 correct = 0
@@ -214,13 +217,13 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 with torch.no_grad():
                     for data in testloader:
                         images, labels = data[0].to(device), data[1].to(device)
-                        outputs = model(images)
+                        outputs = avg_model(images)
                         ce_loss = loss_func(outputs, labels)
 
                         ## Weight L2 loss
                         reg_loss = 0
                         fixed_params = {n: p for n, p in prev_model.named_parameters()}
-                        for n, p in model.named_parameters():
+                        for n, p in avg_model.named_parameters():
                             reg_loss += ((p - fixed_params[n].detach()) ** 2).sum()
 
 
