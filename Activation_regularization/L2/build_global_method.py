@@ -3,6 +3,10 @@ def build_global_update_module(args):
     #    from local_update_set.base import LocalUpdate as LocalUpdateModule
     if args.global_method == 'global_avg':
         from global_update_method.base_aggregation import GlobalUpdate
+    if args.global_method == 'global_avg_momentum':
+        from global_update_method.delta_aggregation_momentum import GlobalUpdate
+    if args.global_method == 'global_avg_momentum2':
+        from global_update_method.delta_aggregation_momentum2 import GlobalUpdate
     elif args.global_method == 'global_adam':
         from global_update_method.adam_aggregation import GlobalUpdate
     elif args.global_method == 'global_adam_proto':
@@ -38,9 +42,11 @@ def build_global_update_module(args):
 
     elif args.global_method == 'FedNAG':
         from global_update_method.delta_aggregation_NAG import GlobalUpdate
-
+    elif args.global_method == 'FedNAG_negative_similarity':
+        from global_update_method.delta_aggregation_NAG_negative_similarity import GlobalUpdate
     else:
         assert False
+
 
         
     return GlobalUpdate

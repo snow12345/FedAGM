@@ -23,8 +23,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
-
-wandb.init(entity='federated_learning', project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else ''))
+wandb_log_dir = os.path.join('/data1/fed/actreg/wandb', experiment_name)
+if not os.path.exists('{}'.format(wandb_log_dir)):
+    os.makedirs('{}'.format(wandb_log_dir))
+wandb.init(entity='federated_learning', project=args.project,group=args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else ""),job_type=args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
+           , dir=wandb_log_dir)
 wandb.run.name=experiment_name
 wandb.run.save()
 wandb.config.update(args)
@@ -47,7 +50,7 @@ if args.set in ['CIFAR10','CIFAR100']:
     normalize=transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)) if args.set=='CIFAR10' else transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
 
     
-    if ('byol' not in args.method and 'simsiam' not in args.method) and (args.hard_aug==False):
+    if ('byol' not in args.method and 'simsiam' not in args.method and 'contrastive' not in args.method) and (args.hard_aug==False):
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
              transforms.RandomCrop(32, padding=4),
@@ -57,7 +60,7 @@ if args.set in ['CIFAR10','CIFAR100']:
              ])
 
 
-    elif ('byol' not in args.method and 'simsiam' not in args.method) and (args.hard_aug==True):
+    elif ('byol' not in args.method and 'simsiam' not in args.method and 'contrastive' not in args.method) and (args.hard_aug==True):
         color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),

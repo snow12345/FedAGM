@@ -44,6 +44,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     for key in global_delta.keys():
         global_delta[key] = torch.zeros_like(global_delta[key])
 
+    global_momentum = copy.deepcopy(model.state_dict())
+    for key in global_momentum.keys():
+        global_momentum[key] = torch.zeros_like(global_momentum[key])
+
     for epoch in range(args.global_epochs):
         wandb_dict={}
         num_of_data_clients=[]
@@ -130,14 +134,17 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 else:
                     global_delta[key] += local_delta[i][key]*num_of_data_clients[i]/local_K[i]
             global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * args.local_epochs * this_lr)
+            global_momentum[key] = args.beta * global_momentum[key] + args.alpha * global_delta[key]
             #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
             global_lr = args.g_lr
+
+            global_weight[key] = FedAvg_weight[key] - args.gamma * global_momentum[key]
             #global_lr = args.g_lr
             #print('global_lr', global_lr)
             #global_weight[key] = global_weight[key] - global_lr * global_delta[key]
             #print((FedAvg_weight[key] == global_weight[key]).all())
         ## global weight update
-        model.load_state_dict(FedAvg_weight)
+        model.load_state_dict(global_weight)
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)                                   
         print(' Average loss {:.3f}'.format(loss_avg))

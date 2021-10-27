@@ -558,6 +558,14 @@ def parse_arguments():
         metavar="N",
         help="weight for nestrov",
     )
+
+    parser.add_argument(
+        "--beta",
+        default=0.0,
+        type=float,
+        metavar="N",
+        help="weight for server momentum",
+    )
     
     '''
 

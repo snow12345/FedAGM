@@ -44,11 +44,16 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     for key in global_delta.keys():
         global_delta[key] = torch.zeros_like(global_delta[key])
 
+    global_momentum = copy.deepcopy(model.state_dict())
+    for key in global_momentum.keys():
+        global_momentum[key] = torch.zeros_like(global_momentum[key])
+
+    print(args.beta)
     for epoch in range(args.global_epochs):
         wandb_dict={}
         num_of_data_clients=[]
         local_K=[]
-
+        
         local_weight = []
         local_loss = []
         local_delta = []
@@ -63,21 +68,11 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             if epoch % args.print_freq == 0:                        
                 global_acc=log_ConfusionMatrix_Umap(copy.deepcopy(model), testloader, args, wandb_dict,
                                                       name="global model_before local training")
-
-        ##### NAG server model
-
-        sending_model_dict = copy.deepcopy(model.state_dict())
-        for key in global_delta.keys():
-            sending_model_dict[key] += -1 * args.gamma * global_delta[key]
-
-        sending_model = copy.deepcopy(model)
-        sending_model.load_state_dict(sending_model_dict)
-
         for user in selected_user:
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
-            weight, loss = local_setting.train(net=copy.deepcopy(sending_model).to(device))
+            weight, loss = local_setting.train(net=copy.deepcopy(model).to(device), delta=global_delta)
             local_K.append(local_setting.K)
             #weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
@@ -121,23 +116,40 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         global_delta = copy.deepcopy(local_delta[0])
         
         
-
+        
         K_mean=sum(local_K)/len(local_K)
+        # for key in global_delta.keys():
+        #     for i in range(len(local_delta)):
+        #         if i==0:
+        #             global_delta[key] *=num_of_data_clients[i]/local_K[i]
+        #         else:
+        #             global_delta[key] += local_delta[i][key]*num_of_data_clients[i]/local_K[i]
+        #     global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * args.local_epochs * this_lr)
+        #     #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
+        #     global_lr = args.g_lr
+        #     #global_lr = args.g_lr
+        #     #print('global_lr', global_lr)
+        #     global_momentum[key] = args.beta * global_momentum[key] + (1-args.beta) * global_delta[key]
+        #     global_weight[key] = global_weight[key] - global_lr * global_delta[key]
+
         for key in global_delta.keys():
             for i in range(len(local_delta)):
                 if i==0:
-                    global_delta[key] *= num_of_data_clients[i]/local_K[i]
+                    global_delta[key] *=num_of_data_clients[i]
                 else:
-                    global_delta[key] += local_delta[i][key]*num_of_data_clients[i]/local_K[i]
-            global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * args.local_epochs * this_lr)
+                    global_delta[key] += local_delta[i][key]*num_of_data_clients[i]
+            global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients)
             #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
             global_lr = args.g_lr
             #global_lr = args.g_lr
             #print('global_lr', global_lr)
-            #global_weight[key] = global_weight[key] - global_lr * global_delta[key]
+            global_momentum[key] = args.beta * global_momentum[key] + args.alpha * global_delta[key]
+            global_weight[key] = global_weight[key] - global_lr * global_momentum[key]
+
             #print((FedAvg_weight[key] == global_weight[key]).all())
+
         ## global weight update
-        model.load_state_dict(FedAvg_weight)
+        model.load_state_dict(global_weight)
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)                                   
         print(' Average loss {:.3f}'.format(loss_avg))
@@ -193,49 +205,24 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             
             model.train()
         elif (args.umap==False) or (epoch%args.umap_freq!=0):
-            loss_func = nn.CrossEntropyLoss()
-            prev_model = copy.deepcopy(model)
-            prev_model.load_state_dict(global_weight)
             if epoch % args.print_freq == 0:
                 model.eval()
                 correct = 0
                 total = 0
-                acc_test = []
-                ce_loss_test = []
-                reg_loss_test = []
-                total_loss_test = []
                 with torch.no_grad():
                     for data in testloader:
                         images, labels = data[0].to(device), data[1].to(device)
                         outputs = model(images)
-                        ce_loss = loss_func(outputs, labels)
-
-                        ## Weight L2 loss
-                        reg_loss = 0
-                        fixed_params = {n: p for n, p in prev_model.named_parameters()}
-                        for n, p in model.named_parameters():
-                            reg_loss += ((p - fixed_params[n].detach()) ** 2).sum()
-
-
-                        loss = args.alpha * ce_loss + 0.5 * args.mu * reg_loss
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)
                         correct += (predicted == labels).sum().item()
-
-                        ce_loss_test.append(ce_loss.item())
-                        reg_loss_test.append(reg_loss.item())
-                        total_loss_test.append(loss.item())
 
                 print('Accuracy of the network on the 10000 test images: %f %%' % (
                         100 * correct / float(total)))
                 acc_train.append(100 * correct / float(total))
 
-                model.train()
-                wandb_dict[args.mode + "_acc"]=acc_train[-1]
-                wandb_dict[args.mode + "_total_loss"] = sum(total_loss_test) / len(total_loss_test)
-                wandb_dict[args.mode + "_ce_loss"] = sum(ce_loss_test) / len(ce_loss_test)
-                wandb_dict[args.mode + "_reg_loss"] = sum(reg_loss_test) / len(reg_loss_test)
-
+            model.train()            
+            wandb_dict[args.mode + "_acc"]=acc_train[-1]
                 
         else:
             pass

@@ -196,13 +196,14 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             loss_func = nn.CrossEntropyLoss()
             prev_model = copy.deepcopy(model)
             prev_model.load_state_dict(global_weight)
+            prev_model_dict = prev_model.state_dict()
             if epoch % args.print_freq == 0:
                 model.eval()
                 correct = 0
                 total = 0
                 acc_test = []
                 ce_loss_test = []
-                reg_loss_test = []
+                lg_loss_test = []
                 total_loss_test = []
                 with torch.no_grad():
                     for data in testloader:
@@ -210,20 +211,22 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                         outputs = model(images)
                         ce_loss = loss_func(outputs, labels)
 
-                        ## Weight L2 loss
-                        reg_loss = 0
-                        fixed_params = {n: p for n, p in prev_model.named_parameters()}
+                        ## local gradient regularization
+                        lg_loss = 0
                         for n, p in model.named_parameters():
-                            reg_loss += ((p - fixed_params[n].detach()) ** 2).sum()
+                            p = torch.flatten(p)
+                            global_p = prev_model_dict[n].detach().clone().to(device)
+                            global_p = torch.flatten(global_p)
+                            lg_loss += (p * global_p.detach()).sum()
 
 
-                        loss = args.alpha * ce_loss + 0.5 * args.mu * reg_loss
+                        loss = args.alpha * ce_loss +  args.mu * lg_loss
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)
                         correct += (predicted == labels).sum().item()
 
                         ce_loss_test.append(ce_loss.item())
-                        reg_loss_test.append(reg_loss.item())
+                        lg_loss_test.append(lg_loss.item())
                         total_loss_test.append(loss.item())
 
                 print('Accuracy of the network on the 10000 test images: %f %%' % (
@@ -234,7 +237,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 wandb_dict[args.mode + "_acc"]=acc_train[-1]
                 wandb_dict[args.mode + "_total_loss"] = sum(total_loss_test) / len(total_loss_test)
                 wandb_dict[args.mode + "_ce_loss"] = sum(ce_loss_test) / len(ce_loss_test)
-                wandb_dict[args.mode + "_reg_loss"] = sum(reg_loss_test) / len(reg_loss_test)
+                wandb_dict[args.mode + "_lg_loss"] = sum(lg_loss_test) / len(lg_loss_test)
 
                 
         else:
