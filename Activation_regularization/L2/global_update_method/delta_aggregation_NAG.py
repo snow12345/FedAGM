@@ -77,7 +77,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             num_of_data_clients.append(len(dataset[user]))
             local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
                                         batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
-            weight, loss = local_setting.train(net=copy.deepcopy(sending_model).to(device))
+            weight, loss = local_setting.train(copy.deepcopy(sending_model).to(device), epoch)
             local_K.append(local_setting.K)
             #weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
