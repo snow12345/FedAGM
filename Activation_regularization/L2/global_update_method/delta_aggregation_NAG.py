@@ -68,7 +68,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
         sending_model_dict = copy.deepcopy(model.state_dict())
         for key in global_delta.keys():
-            sending_model_dict[key] += -1 * args.gamma * global_delta[key]
+            sending_model_dict[key] += -1 * args.gamma*this_lr/args.lr * global_delta[key]
 
         sending_model = copy.deepcopy(model)
         sending_model.load_state_dict(sending_model_dict)

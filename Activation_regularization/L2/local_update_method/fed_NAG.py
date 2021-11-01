@@ -40,13 +40,13 @@ class LocalUpdate(object):
                 ce_loss = self.loss_func(log_probs, labels)
 
                 # ## Weight L2 loss
-                # reg_loss = 0
-                # fixed_params = {n: p for n, p in fixed_model.named_parameters()}
-                # for n, p in net.named_parameters():
-                #     reg_loss += ((p - fixed_params[n].detach()) ** 2).sum()
+                reg_loss = 0
+                fixed_params = {n: p for n, p in fixed_model.named_parameters()}
+                for n, p in net.named_parameters():
+                    reg_loss += ((p - fixed_params[n].detach()) ** 2).sum()
 
-                #loss = self.args.alpha * ce_loss + 0.5 * self.args.mu * reg_loss
-                loss = self.args.alpha * ce_loss
+                loss = self.args.alpha * ce_loss + 0.5 * self.args.mu * reg_loss
+                #loss = self.args.alpha * ce_loss
 
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)

@@ -21,7 +21,7 @@ classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'hors
 
 def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
     model = get_model(args)
-    # model.to(device)
+    model.to(device)
     wandb.watch(model)
     criterion = nn.CrossEntropyLoss().to(device)
     model.train()
@@ -83,7 +83,7 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             ## store local delta
             delta = {}
             for key in weight.keys():
-                delta[key] = weight[key].to('cpu') - global_weight[key]
+                delta[key] = weight[key] - global_weight[key]
             local_delta.append(delta)
 
             client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size,
@@ -131,7 +131,7 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             # print('global_lr', global_lr)
 
             global_h[key] = global_h[key] + global_delta[key]
-            global_weight[key] = FedAvg_weight[key].to('cpu') - global_h[key] / args.alpha
+            global_weight[key] = FedAvg_weight[key] - global_h[key] / args.alpha
 
             # print((FedAvg_weight[key] == global_weight[key]).all())
 
