@@ -39,6 +39,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     acc_train = []
     this_lr = args.lr
     this_alpha = args.alpha
+    this_lamb = args.lamb
     global_delta = copy.deepcopy(model.state_dict())
     m = max(int(args.participation_rate * args.num_of_clients), 1)
     for key in global_delta.keys():
@@ -85,7 +86,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             ## store local delta
             delta = {}
             for key in weight.keys():
-                delta[key] = args.lamb*weight[key]+(1-args.lamb)*sending_model_dict[key] - global_weight[key]
+                delta[key] = this_lamb*weight[key]+(1-this_lamb)*sending_model_dict[key] - global_weight[key]
             local_delta.append(delta)            
             client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
                         
@@ -118,7 +119,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 else:                       
                     FedAvg_weight[key] += local_weight[i][key]*num_of_data_clients[i]
             FedAvg_weight[key] /= total_num_of_data_clients
-            FedAvg_weight[key] = FedAvg_weight[key]*args.lamb +(1-args.lamb)*sending_model_dict[key]
+            FedAvg_weight[key] = FedAvg_weight[key]*this_lamb +(1-this_lamb)*sending_model_dict[key]
         global_delta = copy.deepcopy(local_delta[0])
         
         
@@ -247,6 +248,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         wandb.log(wandb_dict)
 
         this_lr *= args.learning_rate_decay
+        this_lamb *=args.server_learning_rate_decay
         if args.alpha_mul_epoch == True:
             this_alpha = args.alpha * (epoch + 1)
         elif args.alpha_divide_epoch == True:
