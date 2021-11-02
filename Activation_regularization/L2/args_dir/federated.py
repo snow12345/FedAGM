@@ -51,7 +51,10 @@ args = None
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
-
+    
+    parser.add_argument('--agg_list', nargs='*', help='Aggmo momentum decay list',required=False)
+    # Use like:
+    # python arg.py -agg_list 1234 -l 2345 -l 3456 -l 4567
     # General Config
     parser.add_argument(
         "--mode", help="data setting to use", default="iid"
@@ -133,6 +136,7 @@ def parse_arguments():
         metavar="N",
         help="number of total epochs to run",
     )
+
     parser.add_argument(
         "--warmup_epoch",
         default=1,
