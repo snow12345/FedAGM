@@ -67,6 +67,10 @@ def build_local_update_module(args):
 
     elif args.method == 'FedNAG':
         from local_update_method.fed_NAG import LocalUpdate
+
+    elif args.method == 'FedNAG_EWC':
+        from local_update_method.fed_NAG_EWC import LocalUpdate
+
     elif args.method == 'FedNAG_negative_similarity':
         from local_update_method.fed_NAG_negative_similarity import LocalUpdate
     else:

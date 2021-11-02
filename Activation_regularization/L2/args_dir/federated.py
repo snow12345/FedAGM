@@ -389,7 +389,7 @@ def parse_arguments():
     parser.add_argument(
         "--tau",
         
-        default=1e-3,
+        default=0.2,
         type=float,
         metavar="N",
         help="FedAdam beta_2",
@@ -553,7 +553,7 @@ def parse_arguments():
 
     parser.add_argument(
         "--gamma",
-        default=1,
+        default=0.8,
         type=float,
         metavar="N",
         help="weight for nestrov",
@@ -565,6 +565,10 @@ def parse_arguments():
         type=float,
         metavar="N",
         help="weight for server momentum",
+    )
+
+    parser.add_argument(
+        "--warmup", default=0, type=int, help="Number of warmup epoch"
     )
     
     '''
