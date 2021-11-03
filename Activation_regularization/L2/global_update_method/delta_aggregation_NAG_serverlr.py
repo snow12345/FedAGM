@@ -45,11 +45,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     for key in global_delta.keys():
         global_delta[key] = torch.zeros_like(global_delta[key])
 
-        
-    sending_model_dict = copy.deepcopy(model.state_dict())
-    sending_model = copy.deepcopy(model)
-      
-        
+
         
     for epoch in range(args.global_epochs):
         wandb_dict={}
@@ -72,13 +68,12 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                                                       name="global model_before local training")
 
         ##### NAG server model
-
         sending_model_dict = copy.deepcopy(model.state_dict())
         for key in global_delta.keys():
-            sending_model_dict[key] += -1 * args.gamma * global_delta[key]*this_lr
+            sending_model_dict[key] += args.gamma * global_delta[key]*this_lr
 
         sending_model = copy.deepcopy(model)
-        sending_model.load_state_dict(sending_model_dict)
+        sending_model.load_state_dict(sending_model_dict)        
 
         for user in selected_user:
             num_of_data_clients.append(len(dataset[user]))
@@ -135,12 +130,12 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             for i in range(len(local_delta)):
                 if i==0:
                     #global_delta[key] *= num_of_data_clients[i]/local_K[i]
-                    global_delta[key] *= num_of_data_clients[i]
+                    global_delta[key] *=num_of_data_clients[i]
                 else:
                     #global_delta[key] += local_delta[i][key]*num_of_data_clients[i]/local_K[i]
-                    global_delta[key] += local_delta[i][key] * num_of_data_clients[i]
+                    global_delta[key] += local_delta[i][key]*num_of_data_clients[i]
             #global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients * args.local_epochs * this_lr)
-            global_delta[key] = global_delta[key] / (total_num_of_data_clients * this_lr)
+            global_delta[key] = global_delta[key] / (total_num_of_data_clients*this_lr)
             #global_delta[key] = global_delta[key] / float((-1 * len(local_delta)))
             global_lr = args.g_lr
             #global_lr = args.g_lr
@@ -155,12 +150,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         loss_train.append(loss_avg)
         
         
-        sending_model_dict = copy.deepcopy(model.state_dict())
-        for key in global_delta.keys():
-            sending_model_dict[key] += args.gamma * global_delta[key]*this_lr
 
-        sending_model = copy.deepcopy(model)
-        sending_model.load_state_dict(sending_model_dict)        
         
         
         
