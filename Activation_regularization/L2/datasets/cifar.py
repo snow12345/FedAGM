@@ -8,6 +8,8 @@ __all__ = ['cifar_iid']
 def temp_seed(seed):
     state = np.random.get_state()
     np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
     try:
         yield
     finally:
