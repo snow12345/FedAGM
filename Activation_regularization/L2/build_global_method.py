@@ -3,6 +3,8 @@ def build_global_update_module(args):
     #    from local_update_set.base import LocalUpdate as LocalUpdateModule
     if args.global_method == 'global_avg':
         from global_update_method.base_aggregation import GlobalUpdate
+    elif args.global_method == 'SlowMo':
+        from global_update_method.delta_aggregation_slowmo import GlobalUpdate
     elif args.global_method == 'global_avg_momentum':
         from global_update_method.delta_aggregation_momentum import GlobalUpdate
     elif args.global_method == 'global_avg_momentum2':
@@ -32,9 +34,9 @@ def build_global_update_module(args):
     elif args.global_method == 'global_proto3':
         from global_update_method.base_aggregation_proto3 import GlobalUpdate
     elif args.global_method == 'global_proto_scratch':
-        from global_update_method.base_aggregation_proto_scratch import GlobalUpdate        
+        from global_update_method.base_aggregation_proto_scratch import GlobalUpdate
     elif args.global_method == 'global_proto_soft':
-        from global_update_method.base_aggregation_proto_soft import GlobalUpdate        
+        from global_update_method.base_aggregation_proto_soft import GlobalUpdate
     elif args.global_method == 'global_protoserver':
         from global_update_method.base_aggregation_protoserver import GlobalUpdate
     elif args.global_method == 'FedDyn':
@@ -42,13 +44,11 @@ def build_global_update_module(args):
 
     elif args.global_method == 'FedNAG':
         from global_update_method.delta_aggregation_NAG import GlobalUpdate
-    elif args.global_method == 'Aggmo':
-        from global_update_method.delta_aggregation_Aggmo import GlobalUpdate        
+
     elif args.global_method == 'FedNAG_ctr_oversh':
-        from global_update_method.delta_aggregation_NAG_ctr_oversh import GlobalUpdate  
-    elif args.global_method == 'FedNAG_serverlr':
-        from global_update_method.delta_aggregation_NAG_serverlr import GlobalUpdate        
-        
+        from global_update_method.delta_aggregation_NAG_ctr_oversh import GlobalUpdate
+    elif args.global_method == 'FedNAG_ctr_oversh_evaldif':
+        from global_update_method.delta_aggregation_NAG_ctr_oversh_evaldif import GlobalUpdate
     elif args.global_method == 'FedNAG_negative_similarity':
         from global_update_method.delta_aggregation_NAG_negative_similarity import GlobalUpdate
     else:
