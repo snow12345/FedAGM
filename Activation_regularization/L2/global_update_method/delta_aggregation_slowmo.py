@@ -144,7 +144,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             #global_lr = args.g_lr
             #print('global_lr', global_lr)
             global_momentum[key] = args.beta * global_momentum[key] + global_delta[key] / this_lr
-            global_weight[key] = global_weight[key] - global_lr * global_momentum[key]
+            global_weight[key] = global_weight[key] - global_lr * this_lr * global_momentum[key]
 
             #print((FedAvg_weight[key] == global_weight[key]).all())
 
