@@ -20,7 +20,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-LOG_DIR = '/data2/geeho/fed/{}/{}/{}'.format(args.set,'centralized', args.method)
+LOG_DIR = '/data/private/geeho/fed/{}/{}/{}'.format(args.set,'centralized', args.method)
 if not os.path.exists('{}'.format(LOG_DIR)):
     os.makedirs('{}'.format(LOG_DIR))
 
@@ -96,6 +96,55 @@ if args.set == 'CIFAR10':
     classes = ('plane', 'car', 'bird', 'cat',
                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
+elif args.set == 'CIFAR100':
+    if args.method not in ['byol', 'simsiam']:
+        transform_train = transforms.Compose(
+            [transforms.RandomRotation(10),
+             transforms.RandomCrop(32, padding=4),
+             transforms.RandomHorizontalFlip(),
+             transforms.ToTensor(),
+             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+        transform_test = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+
+        trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
+                                                download=True, transform=transform_train)
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
+                                                  shuffle=True, num_workers=args.workers)
+
+        testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
+                                               download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
+                                                 shuffle=False, num_workers=args.workers)
+    else:
+
+        color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
+        transform_train = transforms.Compose(
+            [transforms.RandomRotation(10),
+             transforms.RandomCrop(32, padding=4),
+             transforms.RandomHorizontalFlip(),
+             transforms.RandomApply([color_jitter], p=0.8),
+             transforms.RandomGrayscale(p=0.2),
+             # GaussianBlur(kernel_size=int(0.1 * 32)),
+             transforms.ToTensor(),
+             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+        transform_test = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+
+    trainset = torchvision.datasets.CIFAR100(root=args.data, train=True,
+                                            download=True, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
+                                              shuffle=True, num_workers=args.workers)
+
+    testset = torchvision.datasets.CIFAR100(root=args.data, train=False,
+                                           download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
+                                             shuffle=False, num_workers=args.workers)
+
 elif args.set == 'MNIST':
     # !wget www.di.ens.fr/~lelarge/MNIST.tar.gz
     # !tar -zxvf MNIST.tar.gz
@@ -169,7 +218,7 @@ for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복
 
             print('Accuracy of the network on the 10000 test images: %f %%' % (
                     100 * correct / total))
-
+        acc = 100 * correct / total
         if best_acc < 100 * correct / total:
             best_acc = 100 * correct / total
 
@@ -179,7 +228,10 @@ for epoch in range(args.centralized_epochs):  # 데이터셋을 수차례 반복
             torch.save({'model_state_dict': net.state_dict()},
                        '{}/{}_{}.pth'.format(LOG_DIR, args.additional_experiment_name if args.additional_experiment_name!='' else '', 'best')
                        )
-
+        wandb.log({
+            "acc": acc,
+            'best_acc': best_acc,
+        })
 
         acc_train.append(100 * correct / total)
 
