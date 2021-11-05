@@ -32,7 +32,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     for key in delta_t.keys():
         delta_t[key]*=0
         v_t[key]=delta_t[key]+(args.tau**2)
-    this_server_lr=args.eta
+    this_server_lr=args.g_lr
     
     
     
