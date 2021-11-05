@@ -28,10 +28,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
     
     delta_t=copy.deepcopy(model.state_dict())
+    v_t=copy.deepcopy(delta_t)
     for key in delta_t.keys():
         delta_t[key]*=0
-        delta_t[key]+=(args.tau**2)
-    v_t=copy.deepcopy(delta_t)
+        v_t[key]=delta_t[key]+(args.tau**2)
     this_server_lr=args.eta
     
     
