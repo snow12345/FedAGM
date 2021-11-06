@@ -131,7 +131,12 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             # print('global_lr', global_lr)
 
             global_h[key] = global_h[key] + global_delta[key]
-            global_weight[key] = FedAvg_weight[key] - global_h[key] / args.alpha
+            if args.no_sm:
+                global_weight[key] = FedAvg_weight[key]
+            elif args.no_os:
+                global_weight[key] = global_weight[key] - global_h[key] / args.alpha
+            else:
+                global_weight[key] = FedAvg_weight[key] - global_h[key] / args.alpha
 
             # print((FedAvg_weight[key] == global_weight[key]).all())
 
