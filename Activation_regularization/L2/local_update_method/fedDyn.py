@@ -51,9 +51,15 @@ class LocalUpdate(object):
                     local_d = local_delta[n].detach().clone().to(self.device)
                     local_grad = torch.flatten(local_d)
                     lg_loss += (p * local_grad.detach()).sum()
-
+                if self.args.only_ce:
+                    loss = ce_loss
+                elif self.args.only_linear:
+                    loss = ce_loss - lg_loss
+                else:
+                    loss = ce_loss - lg_loss + 0.5 * self.args.mu * reg_loss
                 #loss = ce_loss - lg_loss + 0.5 * self.args.mu * reg_loss
-                loss = ce_loss - lg_loss + 0.5 * self.args.mu * reg_loss
+                #loss = ce_loss
+                #loss = ce_loss + 0.5 * self.args.mu * reg_loss
                 loss.backward()
                 #torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.gr_clipping_max_norm)
                 optimizer.step()

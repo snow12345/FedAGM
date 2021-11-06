@@ -51,10 +51,7 @@ args = None
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
-    
-    parser.add_argument('--agg_list', nargs='*', help='Aggmo momentum decay list',required=False)
-    # Use like:
-    # python arg.py -agg_list 1234 -l 2345 -l 3456 -l 4567
+
     # General Config
     parser.add_argument(
         "--mode", help="data setting to use", default="iid"
@@ -136,7 +133,6 @@ def parse_arguments():
         metavar="N",
         help="number of total epochs to run",
     )
-
     parser.add_argument(
         "--warmup_epoch",
         default=1,
@@ -574,7 +570,33 @@ def parse_arguments():
     parser.add_argument(
         "--warmup", default=0, type=int, help="Number of warmup epoch"
     )
-    
+
+    ###DYN
+
+    parser.add_argument(
+        "--only_ce",
+        default=False,
+        action="store_true",
+        help="use only ce_loss for FedDyn",
+    )
+    parser.add_argument(
+        "--only_linear",
+        default=False,
+        action="store_true",
+        help="use only Linear term with ce_loss",
+    )
+    parser.add_argument(
+        "--no_sm",
+        default=False,
+        action="store_true",
+        help="no server momentum for FedDyn",
+    )
+    parser.add_argument(
+        "--no_os",
+        default=False,
+        action="store_true",
+        help="no overshooting for FedDyn",
+    )
     '''
 
     parser.add_argument(
