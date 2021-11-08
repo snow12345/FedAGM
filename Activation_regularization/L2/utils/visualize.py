@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 import wandb
 import copy
 
-__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation', 'calculate_delta_variance', 'calculate_divergence_from_optimal']
+__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation', 'calculate_delta_variance', 'calculate_divergence_from_optimal','calculate_divergence_from_center']
 
 # function to show an image
 def imshow(img):
@@ -204,3 +204,15 @@ def calculate_divergence_from_optimal(args, checkpoint_path, agg_model_weight):
     divergence = divergence / denom
     return divergence
 
+
+def calculate_divergence_from_center(args, optimal_model_weight, agg_model_weight):
+
+
+    divergence = 0
+    denom = 0
+    for key in agg_model_weight.keys():
+        divergence += ((optimal_model_weight[key] - agg_model_weight[key])**2).sum()
+        denom += ((optimal_model_weight[key]) ** 2).sum()
+
+    divergence = divergence / denom
+    return divergence

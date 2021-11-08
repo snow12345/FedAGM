@@ -19,7 +19,8 @@ from sklearn import metrics
 from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
 from utils import log_ConfusionMatrix_Umap, log_acc
-from utils import calculate_delta_variance, calculate_divergence_from_optimal
+from utils import calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
+from utils import CenterUpdate
 
 
 #classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -95,10 +96,12 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                     
                         
                         
-                        
-        total_num_of_data_clients=sum(num_of_data_clients)
-                                     
-        
+ 
+
+
+
+
+        total_num_of_data_clients=sum(num_of_data_clients)        
         FedAvg_weight = copy.deepcopy(local_weight[0])
         for key in FedAvg_weight.keys():
             for i in range(len(local_weight)):
@@ -107,6 +110,23 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 else:                       
                     FedAvg_weight[key] += local_weight[i][key]*num_of_data_clients[i]
             FedAvg_weight[key] /= total_num_of_data_clients
+            
+        if args.compare_with_center>0:
+            if args.compare_with_center ==1:
+                idxs=None
+            elif args.compare_with_center ==2:
+                idxs=[]
+                for user in selected_user:
+                    idxs+=dataset[user]
+
+            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
+            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
+            divergence_from_central_update = calculate_divergence_from_center(args, center_weight, FedAvg_weight)
+            wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update
+
+
+
+        
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)
                                        
@@ -128,7 +148,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             wandb_dict[args.mode + "_delta_variance"] = delta_variance
             wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
 
-
+        
+                
         if (args.t_sne==True) and (epoch%args.t_sne_freq==0):
             if epoch % args.print_freq == 0:
                 model.eval()

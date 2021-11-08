@@ -604,6 +604,15 @@ def parse_arguments():
         action="store_true",
         help="Turn on analysis mode",
     )
+    parser.add_argument(
+        
+        "--compare_with_center",
+        default=0,
+        type=int,
+ 
+        help="compare with center update vs FL update (0:Don't compare,1:center update can access to whole dataset,2:center update can access to union of participated clients)",
+    )
+
     '''
 
     parser.add_argument(

@@ -1,4 +1,4 @@
-mport torch.nn as nn
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from utils import DatasetSplit,IL,IL_negsum
@@ -28,10 +28,8 @@ class CenterUpdate(object):
         #### idxs가 None이 아니고 이번 round에 쓰인 user들의 indicies들의 tuple,예를 들어 (user1,user2,...)의 경우 각 client들의 
         #### data들의 합집합을 사용한다. 
         else:
-            self.idxs=[]
-            for idx in idxs:
-                self.idxs+=idx            
-        self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
+            self.idxs=idxs           
+        self.ldr_train = DataLoader(DatasetSplit(dataset, self.idxs), batch_size=batch_size, shuffle=True)
         self.args=args
         self.K = len(self.ldr_train)
 
@@ -43,7 +41,7 @@ class CenterUpdate(object):
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 if count ==self.iteration_num:
                     break
-                count++
+                count+=1
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
                 log_probs = model(images)
