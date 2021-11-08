@@ -83,11 +83,11 @@ def get_model(args):
 
 def get_optimizer(args, parameters):
     if args.set=='CIFAR10':
-        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum,weight_decay=args.weight_decay)
+        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.set=="MNIST":
-        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum,weight_decay=args.weight_decay)
+        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.set=="CIFAR100":
-        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum,weight_decay=args.weight_decay)
+        optimizer = optim.SGD(parameters, lr=args.lr,momentum=args.momentum, weight_decay=args.weight_decay)
     else:
         print("Invalid mode")
         return
@@ -97,17 +97,21 @@ def get_optimizer(args, parameters):
 
 def get_scheduler(optimizer, args):
     if args.set=='CIFAR10':
-        scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
-                                lr_lambda=lambda epoch: args.learning_rate_decay ** epoch,
-                                )
+
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.998)
+        # scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
+        #                         lr_lambda=lambda epoch: args.learning_rate_decay ** epoch,
+        #                         )
     elif args.set=="MNIST":
-        scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
-                                lr_lambda=lambda epoch: args.learning_rate_decay ** (int(epoch/50)),
-                                )
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.998)
+        # scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
+        #                         lr_lambda=lambda epoch: args.learning_rate_decay ** (int(epoch/50)),
+        #                         )
     elif args.set=="CIFAR100":
-        scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
-                                lr_lambda=lambda epoch: args.learning_rate_decay ** (int(epoch/50)),
-                                )
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.998)
+        # scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
+        #                         lr_lambda=lambda epoch: args.learning_rate_decay ** (int(epoch/50)),
+        #                         )
     else:
         print("Invalid mode")
         return

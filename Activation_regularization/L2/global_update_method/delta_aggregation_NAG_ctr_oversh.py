@@ -19,6 +19,7 @@ from sklearn import metrics
 from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
 from utils import log_ConfusionMatrix_Umap, log_acc
+from utils import calculate_delta_variance, calculate_divergence_from_optimal
 
 
 classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -106,7 +107,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                     wandb_dict[name+"local loss"]=loss
                     this_model=copy.deepcopy(model)
                     this_model.load_state_dict(weight)
-                    log_acc(this_model,client_ldr_train,args,wandb_dict,name=name+" local")  
+                    log_acc(this_model,client_ldr_train,args,wandb_dict, name=name+" local")
                     log_ConfusionMatrix_Umap(this_model, testloader, args, wandb_dict, name=name)                
             
             
@@ -147,6 +148,21 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         print(' num_of_data_clients : ',num_of_data_clients)                                   
         print(' Average loss {:.3f}'.format(loss_avg))
         loss_train.append(loss_avg)
+
+        if args.analysis:
+            ## calculate delta variance
+            delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
+
+            ## Calculate distance from Centralized Optimal Point
+            checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
+            divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path, FedAvg_weight)
+
+            ## Calculate
+
+            wandb_dict[args.mode + "_delta_variance"] = delta_variance
+            wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
+
+
         if (args.t_sne==True) and (epoch%args.t_sne_freq==0):
             if epoch % args.print_freq == 0:
                 model.eval()

@@ -8,9 +8,9 @@ from sklearn import metrics
 from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
 import wandb
+import copy
 
-
-__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation']
+__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation', 'calculate_delta_variance', 'calculate_divergence_from_optimal']
 
 # function to show an image
 def imshow(img):
@@ -171,3 +171,36 @@ def get_activation(name, activation):
         activation[name] = output.detach()
 
     return hook
+
+def calculate_delta_variance(args, local_delta, num_of_data_clients):
+    total_num_of_data_clients = sum(num_of_data_clients)
+    global_delta = copy.deepcopy(local_delta[0])
+    variance = 0
+    for key in global_delta.keys():
+        for i in range(len(local_delta)):
+            if i == 0:
+                global_delta[key] *= num_of_data_clients[i]
+            else:
+                global_delta[key] += local_delta[i][key] * num_of_data_clients[i]
+
+        global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients)
+
+        for i in range(len(local_delta)):
+            variance += ((((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2) ** 0.5).sum()
+
+    return variance / total_num_of_data_clients
+
+
+def calculate_divergence_from_optimal(args, checkpoint_path, agg_model_weight):
+
+    optimal_model_weight = torch.load(checkpoint_path)['model_state_dict']
+
+    divergence = 0
+    denom = 0
+    for key in agg_model_weight.keys():
+        divergence = ((optimal_model_weight[key] - agg_model_weight[key])**2).sum()
+        denom = ((optimal_model_weight[key]) ** 2).sum()
+
+    divergence = divergence / denom
+    return divergence
+
