@@ -44,7 +44,8 @@ def build_global_update_module(args):
 
     elif args.global_method == 'FedNAG':
         from global_update_method.delta_aggregation_NAG import GlobalUpdate
-
+    elif args.global_method == 'FedNAG_dyn':
+        from global_update_method.delta_aggregation_NAG_dyn import GlobalUpdate
     elif args.global_method == 'FedNAG_ctr_oversh':
         from global_update_method.delta_aggregation_NAG_ctr_oversh import GlobalUpdate
     elif args.global_method == 'FedNAG_ctr_oversh_evaldif':
