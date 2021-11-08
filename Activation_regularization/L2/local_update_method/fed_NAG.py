@@ -39,7 +39,7 @@ class LocalUpdate(object):
                     log_probs= net(images)
                 ce_loss = self.loss_func(log_probs, labels)
 
-                # ## Weight L2 loss
+                ## Weight L2 loss
                 reg_loss = 0
                 fixed_params = {n: p for n, p in fixed_model.named_parameters()}
                 for n, p in net.named_parameters():
