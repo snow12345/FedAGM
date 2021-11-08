@@ -184,11 +184,14 @@ def calculate_delta_variance(args, local_delta, num_of_data_clients):
                 global_delta[key] += local_delta[i][key] * num_of_data_clients[i]
 
         global_delta[key] = global_delta[key] /  (total_num_of_data_clients)
-
         for i in range(len(local_delta)):
-            variance += ((((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2) ** 0.5).sum()
-
-    return variance / total_num_of_data_clients
+            if i==0:
+                this_variance = (((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2)
+            #variance += ((((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2) ** 0.5).sum()
+            else:
+                this_variance += (((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2)
+        variance += (this_variance**0.5).mean()
+    return variance #/ total_num_of_data_clients
 
 
 def calculate_divergence_from_optimal(args, checkpoint_path, agg_model_weight):
