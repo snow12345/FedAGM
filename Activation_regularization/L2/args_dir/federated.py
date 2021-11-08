@@ -597,6 +597,13 @@ def parse_arguments():
         action="store_true",
         help="no overshooting for FedDyn",
     )
+
+    parser.add_argument(
+        "--analysis",
+        default=False,
+        action="store_true",
+        help="Turn on analysis mode",
+    )
     '''
 
     parser.add_argument(

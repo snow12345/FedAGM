@@ -183,7 +183,7 @@ def calculate_delta_variance(args, local_delta, num_of_data_clients):
             else:
                 global_delta[key] += local_delta[i][key] * num_of_data_clients[i]
 
-        global_delta[key] = global_delta[key] / (-1 * total_num_of_data_clients)
+        global_delta[key] = global_delta[key] /  (total_num_of_data_clients)
 
         for i in range(len(local_delta)):
             variance += ((((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2) ** 0.5).sum()
@@ -198,8 +198,8 @@ def calculate_divergence_from_optimal(args, checkpoint_path, agg_model_weight):
     divergence = 0
     denom = 0
     for key in agg_model_weight.keys():
-        divergence = ((optimal_model_weight[key] - agg_model_weight[key])**2).sum()
-        denom = ((optimal_model_weight[key]) ** 2).sum()
+        divergence += ((optimal_model_weight[key] - agg_model_weight[key])**2).sum()
+        denom += ((optimal_model_weight[key]) ** 2).sum()
 
     divergence = divergence / denom
     return divergence
