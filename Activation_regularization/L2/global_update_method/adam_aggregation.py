@@ -53,6 +53,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     
     
     for epoch in range(args.global_epochs):
+        global_weight = copy.deepcopy(model.state_dict())
         wandb_dict={}
         num_of_data_clients=[]
         local_weight = []
@@ -121,14 +122,14 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         if args.analysis:
             
             ## calculate delta cv
-            delta_cv = calculate_delta_cv(args, copy.deepcopy(delta), num_of_data_clients)
+            delta_cv = calculate_delta_cv(args, copy.deepcopy(local_delta), num_of_data_clients)
             
             ## calculate delta variance
             delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
 
             ## Calculate distance from Centralized Optimal Point
             checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
-            divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path, FedAvg_weight)
+            divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path, x_t)
 
             ## Calculate Weight Divergence
             wandb_dict[args.mode + "_delta_cv"] = delta_cv
