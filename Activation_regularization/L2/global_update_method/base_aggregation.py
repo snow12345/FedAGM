@@ -19,7 +19,7 @@ from sklearn import metrics
 from mlxtend.plotting import plot_confusion_matrix
 from torch.utils.data import DataLoader
 from utils import log_ConfusionMatrix_Umap, log_acc
-from utils import calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
+from utils import calculate_delta_cv,calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
 from utils import CenterUpdate
 
 
@@ -41,7 +41,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     this_lr = args.lr
     this_alpha = args.alpha
     m = max(int(args.participation_rate * args.num_of_clients), 1)
-
+    ideal_model=copy.deepcopy(model)
     for epoch in range(args.global_epochs):
         wandb_dict={}
         num_of_data_clients=[]
@@ -121,8 +121,13 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
             centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
             center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
+            ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
+            ideal_model.load_state_dict(ideal_weight)
             divergence_from_central_update = calculate_divergence_from_center(args, center_weight, FedAvg_weight)
-            wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update
+            divergence_from_central_model = calculate_divergence_from_center(args, ideal_weight, FedAvg_weight)
+            wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update  
+            wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model
+        
 
 
 
@@ -136,6 +141,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         loss_train.append(loss_avg)
 
         if args.analysis:
+            
+            ## calculate delta cv
+            delta_cv = calculate_delta_cv(args, copy.deepcopy(local_delta), num_of_data_clients)
+            
             ## calculate delta variance
             delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
 
@@ -144,7 +153,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path, FedAvg_weight)
 
             ## Calculate Weight Divergence
-
+            wandb_dict[args.mode + "_delta_cv"] = delta_cv
             wandb_dict[args.mode + "_delta_variance"] = delta_variance
             wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
 

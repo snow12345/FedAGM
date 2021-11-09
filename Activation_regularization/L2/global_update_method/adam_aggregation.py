@@ -9,6 +9,18 @@ import numpy as np
 from torch import nn
 import copy
 import torch
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+from utils import DatasetSplit
+from global_update_method.distcheck import check_data_distribution
+import umap.umap_ as umap
+from mpl_toolkits import mplot3d
+from sklearn import metrics
+from mlxtend.plotting import plot_confusion_matrix
+from torch.utils.data import DataLoader
+from utils import log_ConfusionMatrix_Umap, log_acc
+from utils import calculate_delta_cv,calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
+from utils import CenterUpdate
 
 def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     model = get_model(args)
@@ -33,12 +45,15 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         delta_t[key]*=0
         v_t[key]=delta_t[key]+(args.tau**2)
     this_server_lr=args.g_lr
-    
+    ideal_model=copy.deepcopy(model)
+    ideal_delta_t=copy.deepcopy(delta_t)
+    ideal_v_t=copy.deepcopy(v_t)
     
     
     
     
     for epoch in range(args.global_epochs):
+        wandb_dict={}
         num_of_data_clients=[]
         local_weight = []
         local_loss = []
@@ -52,6 +67,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
+            client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
         total_num_of_data_clients=sum(num_of_data_clients)            
             
         client_weight = copy.deepcopy(local_weight[0])
@@ -68,11 +84,39 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             delta_t[key]=delta_t[key]*args.beta_1 + delta_client_mean[key]*(1-args.beta_1)
             v_t[key]=v_t[key]*args.beta_2+(delta_t[key]*delta_t[key])*(1-args.beta_2)
             x_t[key]+=this_server_lr*delta_t[key]/((v_t[key]**0.5)+args.tau)
-            
-            
+                 
             
         
         model.load_state_dict(x_t)
+        
+        
+        if args.compare_with_center>0:
+            if args.compare_with_center ==1:
+                idxs=None
+            elif args.compare_with_center ==2:
+                idxs=[]
+                for user in selected_user:
+                    idxs+=dataset[user]
+            ideal_x_t = copy.deepcopy(ideal_model.state_dict())
+            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
+            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
+            ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
+            for key in ideal_weight.keys():
+                ideal_delta_t[key] = ideal_delta_t[key]*args.beta_1 + (ideal_weight[key]-ideal_x_t[key])*(1-args.beta_1)
+                ideal_v_t[key] = ideal_v_t[key]*args.beta_2+(ideal_delta_t[key]*ideal_delta_t[key])*(1-args.beta_2)
+                ideal_x_t[key] +=this_server_lr*ideal_delta_t[key]/((ideal_v_t[key]**0.5)+args.tau)
+                
+            ideal_model.load_state_dict(ideal_x_t)
+            divergence_from_central_update = calculate_divergence_from_center(args, center_weight, client_weight)
+            divergence_from_central_model = calculate_divergence_from_center(args, ideal_x_t, x_t)
+            wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update  
+            wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model        
+            
+        
+        
+        
+        
+        
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)
         print(' Average loss {:.3f}'.format( loss_avg))
@@ -94,8 +138,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             acc_train.append(100 * correct / float(total))
 
         model.train()
-
-        wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1],'lr':this_lr})
+        wandb_dict[args.mode + "_acc"]=acc_train[-1]
+        wandb_dict[args.mode + '_loss']= loss_avg
+        wandb_dict['lr']=this_lr
+        wandb.log(wandb_dict)
 
         this_lr *= args.learning_rate_decay
         #this_lr=args.lr/((epoch+1)**0.5)
