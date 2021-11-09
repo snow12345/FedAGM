@@ -37,7 +37,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     this_lr = args.lr
     this_alpha = args.alpha
 
-
+    
     
     delta_t=copy.deepcopy(model.state_dict())
     v_t=copy.deepcopy(delta_t)
@@ -57,6 +57,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         num_of_data_clients=[]
         local_weight = []
         local_loss = []
+        local_delta = []
         m = max(int(args.participation_rate * args.num_of_clients), 1)
         selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
         print(f"This is global {epoch} epoch")
@@ -67,6 +68,10 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
             local_weight.append(copy.deepcopy(weight))
             local_loss.append(copy.deepcopy(loss))
+            delta = {}
+            for key in weight.keys():
+                delta[key] = weight[key] - global_weight[key]
+            local_delta.append(delta)
             client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
         total_num_of_data_clients=sum(num_of_data_clients)            
             
@@ -116,7 +121,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         if args.analysis:
             
             ## calculate delta cv
-            delta_cv = calculate_delta_cv(args, copy.deepcopy(local_delta), num_of_data_clients)
+            delta_cv = calculate_delta_cv(args, copy.deepcopy(delta), num_of_data_clients)
             
             ## calculate delta variance
             delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
