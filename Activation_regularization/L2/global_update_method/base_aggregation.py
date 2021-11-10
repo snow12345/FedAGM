@@ -143,7 +143,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         if args.analysis:
             
             ## calculate delta cv
-            delta_cv = calculate_delta_cv(args, copy.deepcopy(local_delta), num_of_data_clients)
+            delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
             
             ## calculate delta variance
             delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
@@ -154,6 +154,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
             ## Calculate Weight Divergence
             wandb_dict[args.mode + "_delta_cv"] = delta_cv
+            wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
             wandb_dict[args.mode + "_delta_variance"] = delta_variance
             wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
 
