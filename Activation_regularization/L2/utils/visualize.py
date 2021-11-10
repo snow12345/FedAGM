@@ -172,10 +172,11 @@ def get_activation(name, activation):
 
     return hook
 
-def calculate_delta_cv(args, local_delta, num_of_data_clients):
+def calculate_delta_cv(args, model, local_delta, num_of_data_clients):
     total_num_of_data_clients = sum(num_of_data_clients)
     global_delta = copy.deepcopy(local_delta[0])
     variance = 0
+    total_parameters = sum(p.numel() for p in model.parameters())
     for key in global_delta.keys():
         for i in range(len(local_delta)):
             if i == 0:
@@ -186,12 +187,14 @@ def calculate_delta_cv(args, local_delta, num_of_data_clients):
         global_delta[key] = global_delta[key] /  (total_num_of_data_clients)
         for i in range(len(local_delta)):
             if i==0:
-                this_variance = (((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2)
+                this_variance = (((local_delta[i][key] - global_delta[key])**2) / (global_delta[key]*total_parameters  + 1e-10)**2)
             #variance += ((((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2) ** 0.5).sum()
             else:
-                this_variance += (((local_delta[i][key] - global_delta[key])**2) / global_delta[key]**2)
+                this_variance += (((local_delta[i][key] - global_delta[key])**2) / (global_delta[key]*total_parameters + 1e-10)**2)
         variance += (this_variance**0.5).sum()
     return variance #/ total_num_of_data_clients
+
+
 
 def calculate_delta_variance(args, local_delta, num_of_data_clients):
     total_num_of_data_clients = sum(num_of_data_clients)
