@@ -128,7 +128,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             ## Calculate distance from Centralized Optimal Point
             checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
             divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path,
-                                                                                    FedAvg_weight)
+                                                                                    x_t)
 
             ## Calculate Weight Divergence
             wandb_dict[args.mode + "_delta_cv"] = delta_cv
