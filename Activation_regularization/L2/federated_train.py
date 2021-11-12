@@ -13,6 +13,7 @@ import wandb
 from build_method import build_local_update_module
 from build_global_method import build_global_update_module
 from utils import MultiViewDataInjector, GaussianBlur
+import datasets as local_datasets
 from utils import get_scheduler, get_optimizer, get_model, get_dataset
 import copy
 
@@ -46,10 +47,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Build Dataset
 
+
 if args.set in ['CIFAR10','CIFAR100']:
     normalize=transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)) if args.set=='CIFAR10' else transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-
-    
     if ('byol' not in args.method and 'simsiam' not in args.method and 'contrastive' not in args.method) and (args.hard_aug==False):
         transform_train = transforms.Compose(
             [transforms.RandomRotation(10),
@@ -100,27 +100,33 @@ if args.set in ['CIFAR10','CIFAR100']:
                                                    download=True, transform=transform_test)
         classes = ('plane', 'car', 'bird', 'cat',
                        'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    else:
+    elif args.set == 'CIFAR100':
         trainset = torchvision.datasets.CIFAR100(root=args.data, train=True,
                                                 download=True, transform=transform_train)
         testset = torchvision.datasets.CIFAR100(root=args.data, train=False,
                                                    download=True, transform=transform_test) 
         classes= tuple(str(i) for i in range(100))
-                                              
-                                              
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
-                                              shuffle=True, num_workers=args.workers)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
-                                             shuffle=False, num_workers=args.workers)
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+elif args.set in ['Tiny-ImageNet']:
+    transform_train = transforms.Compose([
+        transforms.RandomRotation(10),  # RandomRotation 추가
+        transforms.RandomCrop(64, padding=4),
+        # resize 256_comb_coteach_OpenNN_CIFAR -> random_crop 224 ==> crop 32, padding 4
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2770, 0.2691, 0.2821]),
+    ])
+    trainset = local_datasets.TinyImageNetDataset(
+        root=os.path.join(args.data, 'tiny_imagenet'),
+        split='train',
+        transform=transform_train
+    )
+    testset = local_datasets.TinyImageNetDataset(
+        root=os.path.join(args.data, 'tiny_imagenet'),
+        split='test',
+        transform=transform_train
+    )
+    classes = tuple(str(i) for i in range(100))
 
 elif args.set == 'MNIST':
     # !wget www.di.ens.fr/~lelarge/MNIST.tar.gz
@@ -135,87 +141,16 @@ elif args.set == 'MNIST':
                               download=True,
                               transform=transform)
 
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
-                                              shuffle=True, num_workers=args.workers)
     testset = datasets.MNIST(root=args.data, train=False,
                              download=True,
                              transform=transform)
-
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
-                                             shuffle=True, num_workers=args.workers)
-
-
+                                              
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
+                                          shuffle=True, num_workers=args.workers)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
+                                         shuffle=False, num_workers=args.workers)
+    
 
 LocalUpdate = build_local_update_module(args)
 global_update=build_global_update_module(args)
-global_update(args=args,device=device,trainset=trainset,testloader=testloader,LocalUpdate=LocalUpdate)
-
-'''
-model = get_model(args)
-model.to(device)
-wandb.watch(model)
-criterion = nn.CrossEntropyLoss().to(device)
-model.train()
-epoch_loss = []
-weight_saved = model.state_dict()
-
-dataset = get_dataset(args, trainset, args.mode)
-loss_train = []
-acc_train = []
-this_lr = args.lr
-this_alpha = args.alpha
-
-for epoch in range(args.global_epochs):
-    local_weight = []
-    local_loss = []
-    m = max(int(args.participation_rate * args.num_of_clients), 1)
-    selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
-    print(f"This is global {epoch} epoch")
-    for user in selected_user:
-        local_setting = LocalUpdate(args=args, lr=this_lr, local_epoch=args.local_epochs, device=device,
-                                    batch_size=args.batch_size, dataset=trainset, idxs=dataset[user], alpha=this_alpha)
-        weight, loss = local_setting.train(net=copy.deepcopy(model).to(device))
-        local_weight.append(copy.deepcopy(weight))
-        local_loss.append(copy.deepcopy(loss))
-    FedAvg_weight = copy.deepcopy(local_weight[0])
-    for key in FedAvg_weight.keys():
-        for i in range(1, len(local_weight)):
-            FedAvg_weight[key] += local_weight[i][key]
-        FedAvg_weight[key] /= len(local_weight)
-    model.load_state_dict(FedAvg_weight)
-    loss_avg = sum(local_loss) / len(local_loss)
-    print(' Average loss {:.3f}'.format(loss_avg))
-    loss_train.append(loss_avg)
-    if epoch % args.print_freq == 0:
-        model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for data in testloader:
-                images, labels = data[0].to(device), data[1].to(device)
-                outputs = model(images)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-
-        print('Accuracy of the network on the 10000 test images: %f %%' % (
-                100 * correct / float(total)))
-        acc_train.append(100 * correct / float(total))
-
-    model.train()
-
-    wandb.log({args.mode + '_loss': loss_avg, args.mode + "_acc": acc_train[-1],'lr':this_lr})
-
-    this_lr *= args.learning_rate_decay
-    if args.alpha_mul_epoch == True:
-        this_alpha = args.alpha * (epoch + 1)
-    elif args.alpha_divide_epoch == True:
-        this_alpha = args.alpha / (epoch + 1)
-
-
-print('loss_train')
-print(loss_train)
-
-print('acc_train')
-print(acc_train)
-'''
+global_update(args=args, device=device, trainset=trainset, testloader=testloader, LocalUpdate=LocalUpdate)

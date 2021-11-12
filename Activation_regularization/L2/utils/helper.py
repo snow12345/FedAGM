@@ -72,6 +72,8 @@ def get_numclasses(args):
         num_classes=10
     elif args.set in ["CIFAR100"]:
         num_classes=100
+    elif args.set in ["Tiny-ImageNet"]:
+        num_classes=200
     return num_classes
 
 def get_model(args):
