@@ -30,7 +30,7 @@ class LocalUpdate(object):
                 images, labels = images.to(self.device), labels.to(self.device)
                 net.zero_grad()
                 if self.args.arch == "ResNet18":
-                    log_probs = net(images, online_target=False)
+                    log_probs = net(images)
                 else:
                     log_probs= net(images)
                 loss = self.loss_func(log_probs, labels)
