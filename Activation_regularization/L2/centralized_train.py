@@ -20,7 +20,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.cuda_visible_device)
 experiment_name=args.set+"_"+args.mode+(str(args.dirichlet_alpha) if args.mode=='dirichlet' else "")+"_"+args.method+("_"+args.additional_experiment_name if args.additional_experiment_name!='' else '')
 print(experiment_name)
 
-LOG_DIR = '/data/private/geeho/fed/{}/{}/{}'.format(args.set,'centralized', args.method)
+LOG_DIR = './data/saved_model/fed/{}/{}/{}'.format(args.set,'centralized', args.method)
 if not os.path.exists('{}'.format(LOG_DIR)):
     os.makedirs('{}'.format(LOG_DIR))
 
@@ -254,3 +254,10 @@ with torch.no_grad():
 print('Accuracy of the network on the 10000 test images: %f %%' % (
     100 * correct / total))
 
+torch.save({
+            'epoch': epoch,
+            'model_state_dict': net.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            
+            }, (LOG_DIR+"/model.pth"))

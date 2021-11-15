@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from utils import log_ConfusionMatrix_Umap, log_acc
 from utils import calculate_delta_cv,calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
 from utils import CenterUpdate
-
+from utils import *
 
 #classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
@@ -131,7 +131,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
 
 
-        
+        prev_model_weight = copy.deepcopy(model.state_dict)
+        current_model_weight = copy.deepcopy(FedAvg_weight)
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)
                                        
@@ -141,22 +142,24 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         loss_train.append(loss_avg)
 
         if args.analysis:
-            
             ## calculate delta cv
-            delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
-            
+            #delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
+
             ## calculate delta variance
-            delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
+            #delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
 
             ## Calculate distance from Centralized Optimal Point
-            checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
-            divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path, FedAvg_weight)
-
+            #checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
+            #divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path,
+                                                                                   # x_t)
+            checkpoint_path = './data/saved_model/fed/CIFAR10/centralized/Fedavg/_best.pth'
+            cosinesimilarity=calculate_cosinesimilarity_from_optimal(args, checkpoint_path, current_model_weight, prev_model_weight)
+            wandb_dict[args.mode + "_cosinesimilarity"] = cosinesimilarity
             ## Calculate Weight Divergence
-            wandb_dict[args.mode + "_delta_cv"] = delta_cv
-            wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
-            wandb_dict[args.mode + "_delta_variance"] = delta_variance
-            wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
+            #wandb_dict[args.mode + "_delta_cv"] = delta_cv
+            #wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
+            #wandb_dict[args.mode + "_delta_variance"] = delta_variance
+            #wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
 
         
                 

@@ -25,14 +25,14 @@ class FC2(nn.Module):
         return x
 
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self,num_classes = 10,l2_norm = False):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, 5,padding=1)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(64, 64, 5,padding=1)
         self.fc1 = nn.Linear(64 * 6 * 6, 394)
         self.fc2 = nn.Linear(394, 192)
-        self.fc3 = nn.Linear(192, 10)
+        self.fc3 = nn.Linear(192, num_classes)
 
     def forward(self, x):
 
