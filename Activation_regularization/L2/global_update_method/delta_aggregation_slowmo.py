@@ -187,24 +187,28 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model
 
 
-)
         if args.analysis:
             ## calculate delta cv
-            delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
+            #delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
 
             ## calculate delta variance
-            delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
+            #delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
 
             ## Calculate distance from Centralized Optimal Point
-            checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
-            divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path,
-                                                                                    global_weight)
-
+            #checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
+            #divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path,
+                                                                                   # x_t)
+            checkpoint_path = './data/saved_model/fed/CIFAR10/centralized/Fedavg/_best.pth'
+            cosinesimilarity=calculate_cosinesimilarity_from_optimal(args, checkpoint_path, current_model_weight, prev_model_weight)
+            wandb_dict[args.mode + "_cosinesimilarity"] = cosinesimilarity
             ## Calculate Weight Divergence
-            wandb_dict[args.mode + "_delta_cv"] = delta_cv
-            wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
-            wandb_dict[args.mode + "_delta_variance"] = delta_variance
-            wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
+            #wandb_dict[args.mode + "_delta_cv"] = delta_cv
+            #wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
+            #wandb_dict[args.mode + "_delta_variance"] = delta_variance
+            #wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
+            
+            
+            
         if (args.t_sne==True) and (epoch%args.t_sne_freq==0):
             if epoch % args.print_freq == 0:
                 model.eval()
