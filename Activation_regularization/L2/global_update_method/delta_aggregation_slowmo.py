@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from utils import log_ConfusionMatrix_Umap, log_acc
 from utils import calculate_delta_cv,calculate_delta_variance, calculate_divergence_from_optimal,calculate_divergence_from_center
 from utils import CenterUpdate
-
+from utils import *
 
 classes = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
@@ -169,6 +169,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             #print((FedAvg_weight[key] == global_weight[key]).all())
 
         ## global weight update
+        prev_model_weight = copy.deepcopy(model.state_dict())
+        current_model_weight = copy.deepcopy(global_weight)           
         model.load_state_dict(global_weight)
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)                                   
@@ -184,6 +186,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             divergence_from_central_model = calculate_divergence_from_center(args, ideal_init_point, global_weight)
             wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model
 
+
+)
         if args.analysis:
             ## calculate delta cv
             delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)

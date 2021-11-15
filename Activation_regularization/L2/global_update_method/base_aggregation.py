@@ -131,7 +131,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
 
 
 
-        prev_model_weight = copy.deepcopy(model.state_dict)
+        prev_model_weight = copy.deepcopy(model.state_dict())
         current_model_weight = copy.deepcopy(FedAvg_weight)
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)

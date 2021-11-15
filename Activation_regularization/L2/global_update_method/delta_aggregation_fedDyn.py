@@ -144,7 +144,7 @@ def GlobalUpdate(args, device, trainset, testloader, LocalUpdate):
             # print((FedAvg_weight[key] == global_weight[key]).all())
 
         ## global weight update
-        prev_model_weight = copy.deepcopy(model.state_dict)
+        prev_model_weight = copy.deepcopy(model.state_dict())
         current_model_weight = copy.deepcopy(global_weight)
         model.load_state_dict(global_weight)
         loss_avg = sum(local_loss) / len(local_loss)
