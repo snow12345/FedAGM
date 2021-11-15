@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 import wandb
 import copy
 
-__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation', 'calculate_delta_cv','calculate_delta_variance', 'calculate_divergence_from_optimal','calculate_divergence_from_center','calculate_cosinesimilarity_from_optimal']
+__all__ = ['imshow', 'log_acc', 'log_ConfusionMatrix_Umap', 'get_activation', 'calculate_delta_cv','calculate_delta_variance', 'calculate_divergence_from_optimal','calculate_divergence_from_center','calculate_cosinesimilarity_from_optimal','calculate_cosinesimilarity_from_center']
 
 # function to show an image
 def imshow(img):
@@ -263,3 +263,18 @@ def calculate_cosinesimilarity_from_optimal(args, checkpoint_path, current_model
     return cosinesimilarity
 
 
+def calculate_cosinesimilarity_from_center(args, optimal_model_weight, current_model_weight, prev_model_weight):
+
+
+    a_dot_b = 0
+    a_norm = 0
+    b_norm = 0
+    for key in optimal_model_weight.keys():
+        a= (optimal_model_weight[key] - prev_model_weight[key])
+        b= (current_model_weight[key] - prev_model_weight[key])
+        a_dot_b += (a*b).sum()
+        a_norm += (a*a).sum()
+        b_norm += (b*b).sum()
+
+    cosinesimilarity = a_dot_b / (((a_norm)**0.5)*((b_norm)**0.5))
+    return cosinesimilarity

@@ -134,7 +134,24 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         
         prev_model_weight = copy.deepcopy(model.state_dict())
         current_model_weight = copy.deepcopy(FedAvg_weight)            
-        
+        if args.compare_with_center>0:
+            if args.compare_with_center ==1:
+                idxs=None
+            elif args.compare_with_center ==2:
+                idxs=[]
+                for user in selected_user:
+                    idxs+=dataset[user]
+
+            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = 1,device =device,batch_size=args.batch_size*m*len(client_ldr_train),dataset =trainset,idxs=idxs,num_of_participation_clients=m)
+            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
+            #ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
+            #ideal_model.load_state_dict(ideal_weight)
+            cosinesimilarity_centermodel=calculate_cosinesimilarity_from_center(args, center_weight, current_model_weight, prev_model_weight)
+            wandb_dict[args.mode + "_cosinesimilarity_centermodel"] = cosinesimilarity_centermodel
+            #divergence_from_central_update = calculate_divergence_from_center(args, center_weight, FedAvg_weight)
+            #divergence_from_central_model = calculate_divergence_from_center(args, ideal_weight, FedAvg_weight)
+            #wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update  
+            #wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model
         model.load_state_dict(FedAvg_weight)
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)                                   
