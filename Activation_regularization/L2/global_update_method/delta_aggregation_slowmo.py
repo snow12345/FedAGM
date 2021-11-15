@@ -181,8 +181,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
                 for user in selected_user:
                     idxs+=dataset[user]
 
-            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = 1,device =device,batch_size=args.batch_size*m*len(client_ldr_train),dataset =trainset,idxs=idxs,num_of_participation_clients=m)
-            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
+            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
             #ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
             #ideal_model.load_state_dict(ideal_weight)
             cosinesimilarity_centermodel=calculate_cosinesimilarity_from_center(args, center_weight, current_model_weight, prev_model_weight)
