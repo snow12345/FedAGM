@@ -89,7 +89,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             ## store local delta
             delta = {}
             for key in weight.keys():
-                delta[key] = this_tau*weight[key]+(1-this_tau)*sending_model_dict[key] - sending_model_dict[key]
+                delta[key] = this_tau*weight[key]+(1-this_tau)*sending_model_dict[key] - global_weight[key]
             local_delta.append(delta)            
             client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
                         
