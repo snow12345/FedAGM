@@ -50,62 +50,33 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 if args.set in ['CIFAR10','CIFAR100']:
     normalize=transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)) if args.set=='CIFAR10' else transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-    if ('byol' not in args.method and 'simsiam' not in args.method and 'contrastive' not in args.method) and (args.hard_aug==False):
-        transform_train = transforms.Compose(
-            [transforms.RandomRotation(10),
-             transforms.RandomCrop(32, padding=4),
-             transforms.RandomHorizontalFlip(),
-             transforms.ToTensor(),
-             normalize
-             ])
 
+    transform_train = transforms.Compose(
+        [transforms.RandomRotation(10),
+         transforms.RandomCrop(32, padding=4),
+         transforms.RandomHorizontalFlip(),
+         transforms.ToTensor(),
+         normalize
+         ])
 
-    elif ('byol' not in args.method and 'simsiam' not in args.method and 'contrastive' not in args.method) and (args.hard_aug==True):
-        color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
-        transform_train = transforms.Compose(
-            [transforms.RandomRotation(10),
-             transforms.RandomCrop(32, padding=4),
-             transforms.RandomHorizontalFlip(),
-             transforms.RandomApply([color_jitter], p=0.8),
-             transforms.RandomGrayscale(p=0.2),
-             #GaussianBlur(kernel_size=int(0.1 * 32)),
-             transforms.ToTensor(),
-             normalize])
-
-    else:
-    
-        color_jitter = transforms.ColorJitter(0.4 * 1, 0.4 * 1, 0.4 * 1, 0.1 * 1)
-        transform_train = transforms.Compose(
-            [transforms.RandomRotation(10),
-             transforms.RandomCrop(32, padding=4),
-             transforms.RandomHorizontalFlip(),
-             transforms.RandomApply([color_jitter], p=0.8),
-             transforms.RandomGrayscale(p=0.2),
-             #GaussianBlur(kernel_size=int(0.1 * 32)),
-             transforms.ToTensor(),
-             normalize])
-
-
-        transform_train=MultiViewDataInjector([transform_train, transform_train])
-
-                                              
     transform_test = transforms.Compose(
         [
             transforms.ToTensor(),
-            normalize])                                                                                            
+            normalize])
+
     if args.set=='CIFAR10':
         trainset = torchvision.datasets.CIFAR10(root=args.data, train=True,
                                                 download=True, transform=transform_train)
         testset = torchvision.datasets.CIFAR10(root=args.data, train=False,
                                                    download=True, transform=transform_test)
-        classes = ('plane', 'car', 'bird', 'cat',
-                       'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+        # classes = ('plane', 'car', 'bird', 'cat',
+        #                'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     elif args.set == 'CIFAR100':
         trainset = torchvision.datasets.CIFAR100(root=args.data, train=True,
                                                 download=True, transform=transform_train)
         testset = torchvision.datasets.CIFAR100(root=args.data, train=False,
                                                    download=True, transform=transform_test) 
-        classes= tuple(str(i) for i in range(100))
+        #classes= tuple(str(i) for i in range(100))
 
 elif args.set in ['Tiny-ImageNet']:
     transform_train = transforms.Compose([
@@ -126,24 +97,10 @@ elif args.set in ['Tiny-ImageNet']:
         split='test',
         transform=transform_train
     )
-    classes = tuple(str(i) for i in range(100))
+    #classes = tuple(str(i) for i in range(100))
 
-elif args.set == 'MNIST':
-    # !wget www.di.ens.fr/~lelarge/MNIST.tar.gz
-    # !tar -zxvf MNIST.tar.gz
-
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
-    trainset = datasets.MNIST(root=args.data, train=True,
-                              download=True,
-                              transform=transform)
-
-    testset = datasets.MNIST(root=args.data, train=False,
-                             download=True,
-                             transform=transform)
+else:
+    assert False
                                               
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
                                           shuffle=True, num_workers=args.workers)
