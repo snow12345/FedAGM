@@ -9,10 +9,8 @@ def build_global_update_module(args):
         from global_update_method.delta_aggregation import GlobalUpdate
     elif args.global_method == 'FedDyn':
         from global_update_method.delta_aggregation_fedDyn import GlobalUpdate
-    elif args.global_method == 'FedNAG':
-        from global_update_method.delta_aggregation_NAG import GlobalUpdate
-    elif args.global_method == 'FedNAG_ctr_oversh':
-        from global_update_method.delta_aggregation_NAG_ctr_oversh import GlobalUpdate
+    elif args.global_method == 'FedAGM':
+        from global_update_method.delta_aggregation_AGM import GlobalUpdate
     else:
         assert False
         

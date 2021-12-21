@@ -9,6 +9,7 @@ __all__ = ['l2norm','get_numclasses','count_label_distribution','check_data_dist
 def l2norm(x,y):
     z= (((x-y)**2).sum())
     return z/(1+len(x))
+
 class feature_extractor(nn.Module):
             def __init__(self,model,classifier_index=-1):
                 super(feature_extractor, self).__init__()

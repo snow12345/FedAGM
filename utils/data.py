@@ -6,18 +6,7 @@ from datasets.cifar import cifar_noniid, cifar_dirichlet_balanced,cifar_dirichle
 import torch.nn as nn
 
 
-__all__ = ['DatasetSplit', 'DatasetSplitMultiView', 'get_dataset', 'MultiViewDataInjector', 'GaussianBlur', 'TransformTwice'
-                                                                                                            ]
-
-class TransformTwice:
-    def __init__(self, transform):
-        self.transform = transform
-
-    def __call__(self, inp):
-        out1 = self.transform(inp)
-        out2 = self.transform(inp)
-        return out1, out2
-
+__all__ = ['DatasetSplit', 'DatasetSplitMultiView', 'get_dataset']
 
 class DatasetSplit(Dataset):
     """An abstract Dataset class wrapped around Pytorch Dataset class.
@@ -90,37 +79,3 @@ def get_dataset(args, trainset, mode='iid'):
 
     return dataset
 
-
-
-class MultiViewDataInjector(object):
-    def __init__(self, *args):
-        self.transforms = args[0]
-        self.random_flip = transforms.RandomHorizontalFlip()
-
-    def __call__(self, sample, *with_consistent_flipping):
-        if with_consistent_flipping:
-            sample = self.random_flip(sample)
-        output = [transform(sample) for transform in self.transforms]
-        return output
-
-class GaussianBlur(object):
-    """blur a single image on CPU"""
-
-    def __init__(self, kernel_size):
-        radias = kernel_size // 2
-        kernel_size = radias * 2 + 1
-        self.blur_h = nn.Conv2d(3, 3, kernel_size=(kernel_size, 1),
-                                stride=1, padding=0, bias=False, groups=3)
-        self.blur_v = nn.Conv2d(3, 3, kernel_size=(1, kernel_size),
-                                stride=1, padding=0, bias=False, groups=3)
-        self.k = kernel_size
-        self.r = radias
-
-        self.blur = nn.Sequential(
-            nn.ReflectionPad2d(radias),
-            self.blur_h,
-            self.blur_v
-        )
-
-        self.pil_to_tensor = transforms.ToTensor()
-        self.tensor_to_pil = transforms.ToPILImage()

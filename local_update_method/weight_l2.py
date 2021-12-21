@@ -7,6 +7,9 @@ import copy
 
 
 class LocalUpdate(object):
+    """
+    Local training for FedProx
+    """
     def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None,alpha=0.0):
         self.lr=lr
         self.local_epoch=local_epoch
@@ -18,13 +21,13 @@ class LocalUpdate(object):
         self.args=args
 
     def train(self, net):
-        #net.sync_online_and_global()
         net.train()
         fixed_model = copy.deepcopy(net)
-        # train and update
-        max_norm = 5
-        optimizer = optim.SGD(net.parameters(), lr=self.lr,momentum=self.args.momentum,weight_decay=self.args.weight_decay)
+        optimizer = optim.SGD(net.parameters(), lr=self.lr, momentum=self.args.momentum,
+                              weight_decay=self.args.weight_decay)
         epoch_loss = []
+
+        # train and update
         for iter in range(self.local_epoch):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
@@ -33,12 +36,13 @@ class LocalUpdate(object):
                 log_probs = net(images)
                 loss = self.loss_func(log_probs, labels)
 
-                ## Weight L2 loss
-
+                # Weight L2 loss
                 reg_loss = 0
                 fixed_params = {n:p for n,p in fixed_model.named_parameters()}
                 for n, p in net.named_parameters():
                     reg_loss += ((p-fixed_params[n].detach())**2).sum()
+
+                # Total objective
                 loss = loss + 0.5 * self.args.mu * reg_loss
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(net.parameters(), self.args.gr_clipping_max_norm)

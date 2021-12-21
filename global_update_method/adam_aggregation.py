@@ -26,11 +26,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
     model = get_model(args)
     model.to(device)
     wandb.watch(model)
-    criterion = nn.CrossEntropyLoss().to(device)
     model.train()
-    epoch_loss = []
-    weight_saved = model.state_dict()
-
     dataset = get_dataset(args, trainset, args.mode)
     loss_train = []
     acc_train = []
@@ -45,13 +41,7 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         delta_t[key]*=0
         v_t[key]=delta_t[key]+(args.tau**2)
     this_server_lr=args.g_lr
-    ideal_model=copy.deepcopy(model)
-    ideal_delta_t=copy.deepcopy(delta_t)
-    ideal_v_t=copy.deepcopy(v_t)
-    
-    
-    
-    
+
     for epoch in range(args.global_epochs):
         global_weight = copy.deepcopy(model.state_dict())
         wandb_dict={}
@@ -60,6 +50,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         local_loss = []
         local_delta = []
         m = max(int(args.participation_rate * args.num_of_clients), 1)
+
+        # Sample participating agents for this global round
         selected_user = np.random.choice(range(args.num_of_clients), m, replace=False)
         print(f"This is global {epoch} epoch")
         for user in selected_user:
@@ -73,7 +65,6 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             for key in weight.keys():
                 delta[key] = weight[key] - global_weight[key]
             local_delta.append(delta)
-            client_ldr_train = DataLoader(DatasetSplit(trainset, dataset[user]), batch_size=args.batch_size, shuffle=True)
         total_num_of_data_clients=sum(num_of_data_clients)            
             
         client_weight = copy.deepcopy(local_weight[0])
@@ -90,77 +81,8 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
             delta_t[key]=delta_t[key]*args.beta_1 + delta_client_mean[key]*(1-args.beta_1)
             v_t[key]=v_t[key]*args.beta_2+(delta_t[key]*delta_t[key])*(1-args.beta_2)
             x_t[key]+=this_server_lr*delta_t[key]/((v_t[key]**0.5)+args.tau)
-                 
-            
-        prev_model_weight = copy.deepcopy(model.state_dict())
-        current_model_weight = copy.deepcopy(x_t)
-        
-        if args.compare_with_center>0:
-            if args.compare_with_center ==1:
-                idxs=None
-            elif args.compare_with_center ==2:
-                idxs=[]
-                for user in selected_user:
-                    idxs+=dataset[user]
 
-            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
-            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
-            #ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
-            #ideal_model.load_state_dict(ideal_weight)
-            cosinesimilarity_centermodel=calculate_cosinesimilarity_from_center(args, center_weight, current_model_weight, prev_model_weight)
-            wandb_dict[args.mode + "_cosinesimilarity_centermodel"] = cosinesimilarity_centermodel
-            #divergence_from_central_update = calculate_divergence_from_center(args, center_weight, FedAvg_weight)
-            #divergence_from_central_model = calculate_divergence_from_center(args, ideal_weight, FedAvg_weight)
-            #wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update  
-            #wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model        
         model.load_state_dict(x_t)
-        
-        '''
-        if args.compare_with_center>0:
-            if args.compare_with_center ==1:
-                idxs=None
-            elif args.compare_with_center ==2:
-                idxs=[]
-                for user in selected_user:
-                    idxs+=dataset[user]
-            ideal_x_t = copy.deepcopy(ideal_model.state_dict())
-            centerupdate = CenterUpdate(args=args,lr = this_lr,iteration_num = len(client_ldr_train)*args.local_epochs,device =device,batch_size=args.batch_size*m,dataset =trainset,idxs=idxs,num_of_participation_clients=m)
-            center_weight = centerupdate.train(net=copy.deepcopy(model).to(device))  
-            ideal_weight = centerupdate.train(net=copy.deepcopy(ideal_model).to(device))  
-            for key in ideal_weight.keys():
-                ideal_delta_t[key] = ideal_delta_t[key]*args.beta_1 + (ideal_weight[key]-ideal_x_t[key])*(1-args.beta_1)
-                ideal_v_t[key] = ideal_v_t[key]*args.beta_2+(ideal_delta_t[key]*ideal_delta_t[key])*(1-args.beta_2)
-                ideal_x_t[key] +=this_server_lr*ideal_delta_t[key]/((ideal_v_t[key]**0.5)+args.tau)
-                
-            ideal_model.load_state_dict(ideal_x_t)
-            divergence_from_central_update = calculate_divergence_from_center(args, center_weight, client_weight)
-            divergence_from_central_model = calculate_divergence_from_center(args, ideal_x_t, x_t)
-            wandb_dict[args.mode + "_divergence_from_central_update"] = divergence_from_central_update  
-            wandb_dict[args.mode + "_divergence_from_central_model"] = divergence_from_central_model
-        '''
-        if args.analysis:
-            ## calculate delta cv
-            #delta_cv = calculate_delta_cv(args, copy.deepcopy(model), copy.deepcopy(local_delta), num_of_data_clients)
-
-            ## calculate delta variance
-            #delta_variance = calculate_delta_variance(args, copy.deepcopy(local_delta), num_of_data_clients)
-
-            ## Calculate distance from Centralized Optimal Point
-            #checkpoint_path = '/data2/geeho/fed/{}/{}/best.pth'.format(args.set, 'centralized')
-            #divergence_from_centralized_optimal = calculate_divergence_from_optimal(args, checkpoint_path,
-                                                                                   # x_t)
-            checkpoint_path = './data/saved_model/fed/CIFAR10/centralized/Fedavg/_best.pth'
-            cosinesimilarity=calculate_cosinesimilarity_from_optimal(args, checkpoint_path, current_model_weight, prev_model_weight)
-            wandb_dict[args.mode + "_cosinesimilarity"] = cosinesimilarity
-            ## Calculate Weight Divergence
-            #wandb_dict[args.mode + "_delta_cv"] = delta_cv
-            #wandb_dict[args.mode + "_delta_gnsr"] = 1 / delta_cv
-            #wandb_dict[args.mode + "_delta_variance"] = delta_variance
-            #wandb_dict[args.mode + "_divergence_from_centralized_optimal"] = divergence_from_centralized_optimal
-            
-        
-        
-        
         loss_avg = sum(local_loss) / len(local_loss)
         print(' num_of_data_clients : ',num_of_data_clients)
         print(' Average loss {:.3f}'.format( loss_avg))
@@ -188,26 +110,13 @@ def GlobalUpdate(args,device,trainset,testloader,LocalUpdate):
         wandb.log(wandb_dict)
 
         this_lr *= args.learning_rate_decay
-        #this_lr=args.lr/((epoch+1)**0.5)
-        
-        
-        
-        
         if args.alpha_mul_epoch == True:
             this_alpha = args.alpha * (epoch + 1)
         elif args.alpha_divide_epoch == True:
             this_alpha = args.alpha / (epoch + 1)
-
 
     print('loss_train')
     print(loss_train)
 
     print('acc_train')
     print(acc_train)
-
-
-# In[ ]:
-
-
-
-

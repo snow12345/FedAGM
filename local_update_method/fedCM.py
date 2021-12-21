@@ -6,6 +6,9 @@ import torch
 
 
 class LocalUpdate(object):
+    """
+    Local training for FedCM
+    """
     def __init__(self, args, lr, local_epoch, device, batch_size, dataset=None, idxs=None, alpha=0.0):
         self.lr=lr
         self.local_epoch=local_epoch
@@ -18,12 +21,14 @@ class LocalUpdate(object):
         self.K = len(self.ldr_train)
 
     def train(self, net, delta=None):
-        #net.sync_online_and_global()
         net.train()
-        # train and update
 
-        optimizer = FedCM_SGD(net.parameters(), lr=self.lr, momentum=self.args.momentum, weight_decay=self.args.weight_decay)
+        # Local update via interpolation of local gradient and downloaded global gradient
+        optimizer = FedCM_SGD(net.parameters(), lr=self.lr, momentum=self.args.momentum,
+                              weight_decay=self.args.weight_decay)
         epoch_loss = []
+
+        # train and update
         for iter in range(self.local_epoch):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
